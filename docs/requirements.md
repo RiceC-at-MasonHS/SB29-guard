@@ -280,7 +280,7 @@ Language: Go (>=1.22). Rationale: static single binary, cross-compilation (Windo
 - Read-only runtime except cache/log paths
 
 ### Build & Release
-- Makefile / CI pipeline: lint -> test -> build (GOOS/GOARCH matrix) -> generate SBOM -> sign checksums (optional cosign) -> publish artifacts.
+- Direct Go tooling (no Makefile) via documented commands in README / TECHNICAL: `go test ./...`, `go build ./cmd/sb29guard`, matrix builds handled in CI workflows.
 - Deterministic build flags: `-trimpath -ldflags "-s -w -buildid="` and embed version/hash via `-ldflags "-X main.version=... -X main.commit=..."`.
 
 ### Integrity Strategy

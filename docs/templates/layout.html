@@ -1,0 +1,18 @@
+<!-- Documentation snapshot of layout.html -->
+<!-- Source: internal/server/templates/layout.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{block "title" .}}SB29 Guard{{end}}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>{{.CSS}}</style>
+</head>
+<body>
+  <header><h1>{{block "header" .}}SB29 Guard{{end}}</h1></header>
+  <main>
+    {{block "content" .}}{{end}}
+  </main>
+  <footer><small>&copy; {{.Year}} District · Policy v{{.PolicyVersion}}</small></footer>
+</body>
+</html>

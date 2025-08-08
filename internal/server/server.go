@@ -1,8 +1,10 @@
-// Package server provides the HTTP explanation and health endpoints.
+// Package server provides the HTTP explanation, landing, and health endpoints.
 package server
 
 import (
+	"embed"
 	"fmt"
+	"html/template"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,22 +13,34 @@ import (
 	"github.com/RiceC-at-MasonHS/SB29-guard/internal/policy"
 )
 
+//go:embed templates/*.html
+var templateFS embed.FS
+
+//go:embed templates/style.css
+var baseCSS string
+
 // Server hosts HTTP endpoints rendering policy-based explanations.
 type Server struct {
-	addr   string
-	policy *policy.Policy
+	addr      string
+	policy    *policy.Policy
+	tmpl      *template.Template
+	inlineCSS string
 }
 
 // New creates a new Server bound to addr using the supplied policy.
 func New(addr string, p *policy.Policy) *Server {
-	return &Server{addr: addr, policy: p}
+	t := template.New("layout.html").Funcs(template.FuncMap{})
+	tmpl, err := t.ParseFS(templateFS, "templates/layout.html", "templates/root.html", "templates/explain.html")
+	if err != nil {
+		panic(fmt.Sprintf("template parse error: %v", err))
+	}
+	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: baseCSS}
 }
 
 // Start begins serving HTTP until the listener stops.
 func (s *Server) Start() error {
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/explain", s.handleExplain)
-	// root -> simple landing
 	http.HandleFunc("/", s.handleRoot)
 	return http.ListenAndServe(s.addr, nil)
 }
@@ -38,32 +52,33 @@ func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) handleRoot(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = fmt.Fprintf(w, "<html><head><title>SB29 Guard</title></head><body><h1>SB29 Guard</h1><p>Records loaded: %d</p></body></html>", len(s.policy.Records))
+	data := map[string]interface{}{
+		"CSS":           s.inlineCSS,
+		"RecordCount":   len(s.policy.Records),
+		"Year":          time.Now().Year(),
+		"PolicyVersion": s.policy.Version,
+	}
+	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintf(w, "template error: %v", err)
+	}
 }
 
 func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	q := r.URL.Query()
-	// Accept multiple aliases for the original input
-	orig := firstNonEmpty(
-		q.Get("original_domain"),
-		q.Get("original"),
-		q.Get("domain"),
-		q.Get("url"),
-	)
+	orig := firstNonEmpty(q.Get("original_domain"), q.Get("original"), q.Get("domain"), q.Get("url"))
 	if orig == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = fmt.Fprint(w, "<p>Missing required parameter ?original_domain= (or original/domain/url)</p>")
 		return
 	}
-	// If a full URL was passed, parse and extract host
-	if strings.Contains(orig, "://") {
+	if strings.Contains(orig, "://") { // full URL passed
 		if u, err := url.Parse(orig); err == nil && u.Host != "" {
 			orig = u.Host
 		}
 	}
 	orig = strings.ToLower(strings.TrimSpace(orig))
-	// Trim any leading 'www.' (common pattern) for lookup attempt
 	lookupDomain := strings.TrimPrefix(orig, "www.")
 	rec, ok := s.policy.Lookup(lookupDomain)
 	if !ok {
@@ -71,19 +86,28 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 		_, _ = fmt.Fprintf(w, "<html><body><h1>Not Classified</h1><p>The domain %s is not present in the active policy set.</p><p>Policy Version: %s</p></body></html>", orig, s.policy.Version)
 		return
 	}
+
+	// Security / privacy oriented headers
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")
 	w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';")
-	_, _ = fmt.Fprintf(w, "<html><head><title>Blocked: %s</title></head><body><h1>Access Redirected</h1><p>Domain: %s</p><p>Classification: %s</p>", orig, orig, rec.Classification)
-	if rec.Rationale != "" {
-		_, _ = fmt.Fprintf(w, "<p>Rationale: %s</p>", htmlEscape(rec.Rationale))
+
+	data := map[string]interface{}{
+		"CSS":            s.inlineCSS,
+		"Original":       orig,
+		"Classification": rec.Classification,
+		"Rationale":      htmlEscape(rec.Rationale),
+		"SourceRef":      htmlEscape(rec.SourceRef),
+		"PolicyVersion":  s.policy.Version,
+		"Now":            time.Now().UTC().Format(time.RFC3339),
+		"Year":           time.Now().Year(),
 	}
-	if rec.SourceRef != "" {
-		_, _ = fmt.Fprintf(w, "<p>Source: %s</p>", htmlEscape(rec.SourceRef))
+	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = fmt.Fprintf(w, "template error: %v", err)
 	}
-	_, _ = fmt.Fprintf(w, "<p>Policy Version: %s</p><p>Time: %s</p></body></html>", s.policy.Version, time.Now().UTC().Format(time.RFC3339))
 }
 
 func firstNonEmpty(vals ...string) string {
@@ -95,7 +119,7 @@ func firstNonEmpty(vals ...string) string {
 	return ""
 }
 
-// Minimal HTML escaping for rationale/source fields (avoid importing html/template yet)
+// Minimal HTML escaping for rationale/source fields (kept lightweight)
 func htmlEscape(s string) string {
 	repl := []struct{ old, new string }{
 		{"&", "&amp;"},
@@ -110,3 +134,5 @@ func htmlEscape(s string) string {
 	}
 	return out
 }
+
+// baseCSS is embedded from templates/style.css
