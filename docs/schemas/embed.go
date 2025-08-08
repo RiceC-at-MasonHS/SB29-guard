@@ -1,3 +1,4 @@
+// Package docs_schemas is a deprecated placeholder; schema embedding moved to internal/policy.
 package docs_schemas
 
 // (deprecated) Schema embedding moved to internal/policy.

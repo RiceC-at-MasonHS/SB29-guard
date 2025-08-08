@@ -1,3 +1,4 @@
+// Package hash provides simple hashing utilities.
 package hash
 
 import (

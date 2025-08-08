@@ -1,3 +1,4 @@
+// Package dnsgen generates DNS artifacts (hosts, BIND, Unbound, RPZ) from the policy.
 package dnsgen
 
 import (
@@ -13,6 +14,7 @@ import (
 	"github.com/RiceC-at-MasonHS/SB29-guard/internal/policy"
 )
 
+// Options controls DNS artifact generation.
 type Options struct {
 	Format         string
 	Mode           string // a-record|cname
@@ -22,6 +24,7 @@ type Options struct {
 	SerialStrategy string // date|epoch|hash
 }
 
+// Generate produces DNS content for the given policy according to Options.
 func Generate(p *policy.Policy, o Options) ([]byte, error) {
 	if o.Format == "" {
 		return nil, errors.New("format required")
@@ -81,10 +84,7 @@ func genBindZone(recs []policy.Record, p *policy.Policy, o Options) ([]byte, err
 	fmt.Fprintf(&b, "@ IN SOA %s. hostmaster.%s. (%s 3600 900 604800 %d)\n", o.RedirectHost, o.RedirectHost, serial, o.TTL)
 	fmt.Fprintf(&b, "@ IN NS %s.\n", o.RedirectHost)
 	for _, r := range recs {
-		name := r.Domain
-		if strings.HasPrefix(name, "*.") {
-			name = strings.TrimPrefix(name, "*.")
-		}
+		name := strings.TrimPrefix(r.Domain, "*.")
 		if o.Mode == "cname" {
 			fmt.Fprintf(&b, "%s %d IN CNAME %s.\n", name, o.TTL, o.RedirectHost)
 		} else {
@@ -101,10 +101,7 @@ func genUnbound(recs []policy.Record, p *policy.Policy, o Options) ([]byte, erro
 	var b strings.Builder
 	fmt.Fprintf(&b, "# sb29guard format=unbound mode=%s policy_version=%s\n", o.Mode, p.Version)
 	for _, r := range recs {
-		name := r.Domain
-		if strings.HasPrefix(name, "*.") {
-			name = strings.TrimPrefix(name, "*.")
-		}
+		name := strings.TrimPrefix(r.Domain, "*.")
 		if o.Mode == "cname" {
 			fmt.Fprintf(&b, "local-data: \"%s CNAME %s\"\n", name, o.RedirectHost)
 		} else {
@@ -144,11 +141,11 @@ func genRPZ(recs []policy.Record, p *policy.Policy, o Options) ([]byte, error) {
 // epoch: Unix timestamp
 // hash: first 4 bytes of policy hash interpreted as big-endian uint32
 func computeSerial(p *policy.Policy, o Options) string {
-	strat := o.SerialStrategy
-	if strat == "" {
-		strat = "date"
+	strategy := o.SerialStrategy
+	if strategy == "" {
+		strategy = "date"
 	}
-	switch strat {
+	switch strategy {
 	case "epoch":
 		return strconv.FormatInt(time.Now().UTC().Unix(), 10)
 	case "hash":

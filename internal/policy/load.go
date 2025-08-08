@@ -1,4 +1,4 @@
-package policy
+package policy // import "internal/policy" implements loading & schema validation utilities.
 
 import (
 	"errors"

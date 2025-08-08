@@ -1,3 +1,4 @@
+// Package policy defines the policy data model, loading, validation, and schema helpers.
 package policy
 
 import (
@@ -59,10 +60,6 @@ func flattenSchemaError(err error) string {
 		return ""
 	}
 	// jsonschema/v5 returns *jsonschema.ValidationError with hierarchical context
-	type causer interface {
-		Unwrap() error
-		Error() string
-	}
 	var parts []string
 	queue := []error{err}
 	for len(queue) > 0 {
