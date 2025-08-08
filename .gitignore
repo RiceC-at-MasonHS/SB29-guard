@@ -3,6 +3,18 @@
 # Build outputs / compiled binaries
 /bin/
 /dist/
+sb29guard
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace files (if locally used but not committed)
+go.work
+go.work.sum
 
 # DNS / manifest outputs
 dist/dns/
@@ -29,7 +41,32 @@ Thumbs.db
 
 # Test coverage / tooling
 coverage.out
+coverage/
+*.coverprofile
+*.cov
+*.lcov
+
+# Profiling & trace artifacts
+cpu.prof
+mem.prof
+block.prof
+mutex.prof
+trace.out
+
+# Logs
+*.log
 
 # Temporary files
 *.tmp
 *.swp
+*.swo
+*.bak
+*.orig
+*~
+
+# Shell history / direnv / local dev helpers
+.envrc
+.direnv/
+
+# Vendor (if a developer runs `go mod vendor` locally)
+vendor/
