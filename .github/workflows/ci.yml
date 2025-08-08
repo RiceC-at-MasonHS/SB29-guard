@@ -1,0 +1,107 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          check-latest: true
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=3m
+  build-test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          check-latest: true
+      - name: Go module cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Build
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      - name: Fmt Check
+        run: |
+          fmt_out=$(gofmt -l . | grep -v '^vendor/' || true)
+          if [ -n "$fmt_out" ]; then echo "Go files not formatted:"; echo "$fmt_out"; exit 1; fi
+      - name: Test (race + coverage)
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+      - name: Per-Package Coverage (policy)
+        run: |
+          mkdir -p coverage
+          go test -count=1 -covermode=atomic -coverprofile=coverage/coverage.policy.out ./internal/policy
+          line=$(go tool cover -func=coverage/coverage.policy.out | tail -n 1)
+          echo "Policy: $line"
+          pct=$(echo "$line" | awk '{print $3}' | sed 's/%//')
+          echo "{\"package\":\"internal/policy\",\"coverage_percent\":$pct}" > coverage/policy.json
+          thresh=70
+          int=${pct%.*}
+          if [ "$int" -lt "$thresh" ]; then echo "Coverage below threshold for policy: $pct% < $thresh%" >&2; exit 1; fi
+      - name: Per-Package Coverage (dnsgen)
+        run: |
+          go test -count=1 -covermode=atomic -coverprofile=coverage/coverage.dnsgen.out ./internal/dnsgen
+          line=$(go tool cover -func=coverage/coverage.dnsgen.out | tail -n 1)
+          echo "DNSGen: $line"
+          pct=$(echo "$line" | awk '{print $3}' | sed 's/%//')
+          echo "{\"package\":\"internal/dnsgen\",\"coverage_percent\":$pct}" > coverage/dnsgen.json
+          thresh=70
+          int=${pct%.*}
+          if [ "$int" -lt "$thresh" ]; then echo "Coverage below threshold for dnsgen: $pct% < $thresh%" >&2; exit 1; fi
+      - name: Combine Coverage Summaries
+        run: |
+          echo '{"packages":[' > coverage/summary.json
+          first=1
+          for f in coverage/policy.json coverage/dnsgen.json; do
+            if [ $first -eq 0 ]; then echo ',' >> coverage/summary.json; fi
+            first=0
+            cat "$f" >> coverage/summary.json
+          done
+          echo ']}' >> coverage/summary.json
+          {
+            echo "Per-Package Coverage:";
+            go tool cover -func=coverage/coverage.policy.out | tail -n 1;
+            go tool cover -func=coverage/coverage.dnsgen.out | tail -n 1;
+          } > coverage/summary.txt
+      - name: Upload Split Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-split
+          path: coverage/
+      - name: Coverage Summary
+        run: go tool cover -func=coverage.out | tail -n 1
+      - name: Upload Coverage Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.out
+          flags: unit
+          fail_ci_if_error: false
+          verbose: true

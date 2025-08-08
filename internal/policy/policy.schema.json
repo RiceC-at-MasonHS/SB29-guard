@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sb29-guard.org/schemas/policy.schema.json",
+  "title": "SB29 Guard Policy File",
+  "type": "object",
+  "required": ["version", "updated", "records"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string", "description": "Semantic version of the policy dataset" },
+    "updated": { "type": "string", "format": "date", "description": "Date the policy file was last updated (YYYY-MM-DD)" },
+    "records": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/record" } },
+    "metadata": {
+      "type": "object",
+      "description": "Optional global metadata",
+      "additionalProperties": false,
+      "properties": {
+        "generated_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "source": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "required": ["domain", "classification", "rationale", "last_review", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "type": "string",
+          "pattern": "^(\\*\\.)?([a-z0-9-]{1,63}\\.)+[a-z]{2,63}$",
+          "description": "FQDN or leftmost wildcard domain"
+        },
+        "classification": { "type": "string", "enum": ["NO_DPA", "PENDING_REVIEW", "EXPIRED_DPA", "LEGAL_HOLD", "OTHER"] },
+        "rationale": { "type": "string", "minLength": 5, "maxLength": 1000 },
+        "last_review": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "notes": { "type": "string" },
+        "source_ref": { "type": "string" },
+        "expires": { "type": "string", "format": "date" },
+        "tags": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z0-9_\\-]{1,32}$" }, "uniqueItems": true, "maxItems": 10 }
+      }
+    }
+  }
+}

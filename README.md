@@ -1,4 +1,14 @@
 # SB29-guard
+
+![CI](https://github.com/RiceC-at-MasonHS/SB29-guard/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://codecov.io/gh/RiceC-at-MasonHS/SB29-guard/branch/main/graph/badge.svg)
+![Release](https://img.shields.io/github/v/tag/RiceC-at-MasonHS/SB29-guard?label=release)
+![Lint](https://img.shields.io/badge/lint-golangci--lint-blue)
+
+> Coverage: generated each run (see Actions artifacts). You can later wire a badge via a coverage service.
+
+### Coverage Strategy
+CI enforces per-package coverage thresholds inline (no external script). Current targets: 70% for `internal/policy` and `internal/dnsgen`. Threshold logic lives in the workflow (`.github/workflows/ci.yml`) so adjustments only require editing that file.
 DNS-based page redirect to support teachers with requirements of Ohio SB29.
 
 ## Overview
@@ -64,7 +74,7 @@ SB29_GOOGLE_CREDENTIALS_JSON=./secrets/google-service-account.json
 An example public Google Sheet (read-only) you can view / copy:
 
 Sheet URL:
-https://docs.google.com/spreadsheets/d/1UiaBnVMaDgB00H1C50VUEkssWDA7S_11Mk604S2kw4w/edit?usp=sharing
+https://docs.google.com/spreadsheets/d/1UiaBnVMaDgB00H1C50VUEkssWDA7S_11Mk604S2kw4w/copy
 
 Sheet ID (for `SB29_SHEET_ID`):
 `1UiaBnVMaDgB00H1C50VUEkssWDA7S_11Mk604S2kw4w`
@@ -141,6 +151,14 @@ Daily JSON (no PII) summarizing blocked lookups. Example:
 ```
 
 ## Roadmap (Abbrev.)
+## Releases
+Tagged releases (vX.Y.Z) publish multi-platform binaries via GitHub Actions. Create a tag to trigger:
+```
+git tag v0.1.0
+git push origin v0.1.0
+```
+Artifacts include SHA256SUMS for integrity verification.
+
 - Additional DNS formats (pfSense, OPNsense, Infoblox, Route53, Azure, GCP)
 - Google Sheets validation feedback loop
 - OpenAPI spec & web UI improvement

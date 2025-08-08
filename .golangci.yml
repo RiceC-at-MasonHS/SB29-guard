@@ -1,0 +1,28 @@
+run:
+  timeout: 3m
+  tests: true
+linters:
+  enable:
+    - govet
+    - staticcheck
+    - gofmt
+    - goimports
+    - ineffassign
+    - misspell
+    - revive
+    - errcheck
+    - gosimple
+    - unused
+  disable:
+    - dupl
+issues:
+  exclude-use-default: false
+  max-same-issues: 5
+  max-issues-per-linter: 50
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - revive
+        - errcheck
+output:
+  sort-results: true

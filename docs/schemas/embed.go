@@ -1,2 +1,4 @@
+package docs_schemas
+
 // (deprecated) Schema embedding moved to internal/policy.
-// This file intentionally left minimal; see internal/policy/policy.schema.json.
+// This stub file remains only to avoid breaking historical references; it contains no code.

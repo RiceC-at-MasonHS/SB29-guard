@@ -1,0 +1,16 @@
+version: 0.1.0
+updated: 2025-08-08
+records:
+  - domain: "exampletool.com"
+    classification: NO_DPA
+    rationale: "Vendor has not signed district-approved Digital Privacy Agreement."
+    last_review: 2025-08-01
+    status: active
+    source_ref: "District Legal Review #123"
+    tags: [EDTECH, CORE]
+  - domain: "*.trackingwidgets.io"
+    classification: EXPIRED_DPA
+    rationale: "Agreement expired; renewal pending."
+    last_review: 2025-07-15
+    status: active
+    tags: [TRACKING]
