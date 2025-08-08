@@ -1,0 +1,35 @@
+# SB29-guard Generated / Build Artifacts
+
+# Build outputs / compiled binaries
+/bin/
+/dist/
+
+# DNS / manifest outputs
+dist/dns/
+**/manifest.json
+
+# Aggregated logs & runtime logs
+logs/
+
+# Policy cache / sheet sync cache
+cache/
+policy/domains.generated.yaml
+
+# Local environment & secrets
+.env
+.env.*
+!.env.example
+secrets/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Test coverage / tooling
+coverage.out
+
+# Temporary files
+*.tmp
+*.swp
