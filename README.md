@@ -1,81 +1,103 @@
-groupme.com	LEGAL_HOLD	Pending legal/privacy assessment due to chat features	2025-08-08	suspended	TCK-1202	Temporarily suspended pending risk evaluation	2025-12-31	COMMUNICATION,RISK
-# SB29-guard
+<div align="center">
 
-District-friendly tool to show a clear, plain-language “Why was I redirected?” page when staff or students try to use an online tool without an approved Data Privacy Agreement (SB29 context). All HTML templates & CSS are embedded for a single self‑contained binary.
+# SB29-guard 🚦📘
+
+Making blocked ed‑tech domains less confusing (and more transparent) for teachers & students.
+
+<!-- Badges -->
+[![Build](https://github.com/RiceC-at-MasonHS/SB29-guard/actions/workflows/ci.yml/badge.svg)](../../actions)
+![Go Version](https://img.shields.io/badge/go-1.22+-00ADD8?logo=go)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Status](https://img.shields.io/badge/status-early%20preview-orange)
+![Coverage](https://img.shields.io/badge/coverage-core%2080%25+-brightgreen)
+
+</div>
+
+District‑friendly tool that shows a clear, plain‑language “Why was I redirected?” page when staff or students try a site without an approved Data Privacy Agreement (SB29 context). One small self‑contained binary (HTML & CSS embedded). No tracking. No student data stored. ✨
 
 If you just need to get it running, follow the Quick Start below. For deeper technical details, see `TECHNICAL.md`.
 
 ## What It Does (Plain Language)
-When a blocked site is requested, your DNS redirects the user to this service. The service shows:
-- The original site name
-- The reason it’s not currently approved (e.g., NO_DPA, EXPIRED_DPA)
-- Optional rationale and reference (ticket / review ID)
+When a blocked site is requested, school DNS points the browser here. The page clearly explains:
+* 🔗 The site name
+* 🏷️ Why it’s restricted (e.g., NO_DPA, EXPIRED_DPA)
+* 📝 Optional rationale / ticket reference
+* 📌 Policy version (for audits)
 
-## Basic Concepts
-- Policy File: A simple list of domains and reasons (you can edit a YAML file). Wildcards like `*.example.com` are supported.
-- Redirect Page: A minimal web page explaining the block.
-- DNS Lists: Generated files you can load into DNS platforms (hosts file, BIND zone, Unbound local-data, RPZ). All point those domains at your redirect host/IP.
+## Core Pieces
+* Policy file (YAML) – you edit it; wildcards like `*.example.com` allowed.
+* Explanation page – simple, readable, accessible.
+* DNS outputs – hosts, BIND, Unbound, RPZ to steer blocked domains to this page.
 
-## Quick Start (File Mode)
-1. Copy the example: `cp policy/domains.example.yaml policy/domains.yaml`
-2. Edit `policy/domains.yaml` – change or add domains & reasons.
-3. Validate:
+## Quick Start (🪄 ~2 minutes)
+1. Copy example policy:
+	```
+	cp policy/domains.example.yaml policy/domains.yaml
+	```
+2. Edit `policy/domains.yaml` (add or change a domain entry).
+3. Validate it:
 	```
 	sb29guard validate --policy policy/domains.yaml
 	```
-4. Generate a simple hosts file that redirects to an internal IP (replace 10.10.10.50):
+4. Generate a hosts file (swap in your internal IP):
 	```
 	sb29guard generate-dns --policy policy/domains.yaml --format hosts --mode a-record --redirect-ipv4 10.10.10.50 --out dist/dns/hosts.txt
 	```
-5. Or create a BIND zone with a redirect host:
+5. Or generate a BIND zone using a redirect host:
 	```
 	sb29guard generate-dns --policy policy/domains.yaml --format bind --mode cname --redirect-host blocked.guard.local --out dist/dns/zone.db
 	```
-6. Run the explanation server (default port 8080):
+6. Run the server:
 	```
 	sb29guard serve --policy policy/domains.yaml
 	```
-7. Test in a browser:
+7. Open:
 	`http://localhost:8080/explain?domain=exampletool.com`
 
-## Adding / Updating a Domain
-Open `policy/domains.yaml`, duplicate an entry, change the domain and classification, keep dates in `YYYY-MM-DD`.
+## Add / Update a Domain 🧾
+Edit `policy/domains.yaml`. Duplicate an existing record and change the domain.
 
-Common classifications (choose one):
-`NO_DPA`, `PENDING_REVIEW`, `EXPIRED_DPA`, `LEGAL_HOLD`, `OTHER`
+Classifications: `NO_DPA`, `PENDING_REVIEW`, `EXPIRED_DPA`, `LEGAL_HOLD`, `OTHER`.
 
-Set `status: active` to enforce. Use `suspended` to temporarily disable an entry (it will not appear in new DNS outputs).
+`status: active` = enforced. `status: suspended` = ignored in new DNS outputs & hash.
 
 ## Wildcards
 Use `*.trackingwidgets.io` to cover any subdomain like `api.trackingwidgets.io`. The explanation page will match both the base domain and subdomains.
 
-## Optional: Spreadsheet (Planned)
-Future versions will allow maintaining the list in a secure Google Sheet instead of editing the YAML manually. (See `TECHNICAL.md`.)
+## (Planned) Spreadsheet Input 📊
+Future option to sync from a Google Sheet (see TECHNICAL.md roadmap section).
 
-## Updating DNS
-Regenerate the DNS file and deploy to your DNS resolver whenever you change the policy. Keep the redirect IP/host pointing at the server that runs `sb29guard serve`.
+## Updating DNS 🔁
+Whenever the policy changes:
+```
+sb29guard generate-dns --policy policy/domains.yaml --format hosts --mode a-record --redirect-ipv4 10.10.10.50 --out dist/dns/hosts.txt
+```
+Deploy the refreshed file to your DNS platform.
 
-## Integrity / Audit
-You can get a stable hash of the active policy (excludes suspended entries):
+## Integrity / Audit 🔐
+Stable hash of active (non‑suspended) records:
 ```
 sb29guard hash --policy policy/domains.yaml
 ```
 Record that hash if you need an audit trail.
 
-## Releases
-Pre-built binaries are published on the Releases page. Download the one for your OS, place it on a server (or in a container), and follow Quick Start.
+## Releases 📦
+Pre-built binaries (see Releases). Download, place on a server (or container), run commands above.
 
-### Building From Source (Developers)
-Ensure Go 1.22+ is installed, then (policy, dns generation, server, and CLI commands all have tests):
+### Building From Source (Developers) 🛠️
+Need to hack? Install Go 1.22+ then:
 ```
 go test ./...
 go build -trimpath -ldflags "-s -w" ./cmd/sb29guard
 ./sb29guard --help
 ```
-No Makefile required; CI uses the same commands. Per‑package coverage gates focus on critical logic (policy, dns generation). CLI now has basic execution + direct invocation tests.
+No Makefile. CI mirrors these steps. Core logic (policy, DNS generation) has coverage gates; CLI & server also tested.
 
-## Need More Detail?
-See `TECHNICAL.md` for schema, advanced environment variables, roadmap, and contributor guidance. For branding or page layout changes, read `CUSTOMIZING.md`.
+## Need More Detail? 🔍
+See `TECHNICAL.md` (internals, roadmap) and `CUSTOMIZING.md` (branding/templates). Keep this README teacher‑/admin‑friendly.
 
-## Disclaimer
-This tool assists with transparency and process—it does not replace formal legal review. Always confirm status with your district’s data privacy / legal team.
+## Disclaimer ⚖️
+Helps with transparency & workflow. Does NOT replace district legal review. Always verify with your data privacy / legal team.
+
+---
+Questions or ideas? Open an issue. Contributions welcome.
