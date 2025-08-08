@@ -26,6 +26,8 @@ sb29guard
 
 ## validate
 Validate the policy file.
+Flags:
+- `--strict` (default true) enforce JSON Schema (set false for transitional validation)
 Exit Codes:
 - 0 success
 - 1 schema invalid
@@ -102,6 +104,8 @@ Exit Codes: 0 found, 3 not found.
 
 ## hash
 Computes canonical hash of sorted active records (domain + classification + rationale + last_review + status + optional fields normalized).
+Flags:
+- `--strict` (default true) enforce JSON Schema before hashing
 Output JSON includes: hash, record_count, version, updated.
 
 ## export-schema
