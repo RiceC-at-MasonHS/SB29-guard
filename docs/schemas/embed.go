@@ -1,5 +1,8 @@
-// Package docsschemas is a deprecated placeholder; schema embedding moved to internal/policy.
-// Kept for backward compatibility with earlier documentation references.
+//go:build ignore
+// +build ignore
+
+// (ignored) Deprecated placeholder; schema embedding moved to internal/policy.
+// This file is excluded from normal builds/tests to avoid showing a docs-only package.
 package docsschemas
 
 // (deprecated) Schema embedding moved to internal/policy.

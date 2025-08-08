@@ -7,6 +7,7 @@ This document contains advanced / implementation details for developers and tech
 - Google Sheets Integration Details
 - Environment Variables
 - Sample Policy Rows
+- Templating & Embedding
 - Coverage Strategy & Quality Gates
 - Hashing / Integrity
 - Aggregated Logs Format
@@ -73,13 +74,14 @@ quizlet.com	EXPIRED_DPA	Prior DPA expired – renewal in progress	2025-08-08	act
 exampletool.com	PENDING_REVIEW	Awaiting initial privacy review	2025-08-08	active	TCK-1205	Teacher requested addition last week		PILOT
 ```
 
+### Templating & Embedding
+Runtime UI (root + explanation pages) uses Go `html/template` with three files: `layout.html`, `root.html`, `explain.html` plus `style.css`. All are embedded using `//go:embed` so no external assets are required. Snapshot copies for documentation: `docs/templates/`. Future enhancement: optional `--templates` directory override.
+
 ### Coverage Strategy
-CI enforces per-package thresholds (currently 70% for `internal/policy` and `internal/dnsgen`). See `.github/workflows/ci.yml` for inline steps. Raise thresholds as test depth improves.
+CI enforces per-package thresholds (currently 70%+ for `internal/policy`; `internal/dnsgen` tracked similarly). Other packages (server, hash, CLI) have growing coverage but are not yet gate-enforced. Policy, DNS generation, and server negative paths are explicitly tested; hash utility 100%.
 
 ### Hashing & Integrity
-- Canonical hash: SHA-256 over normalized active records (domain, classification, rationale, last_review, status)
-- Exposed via CLI `hash` command.
-- Intended for artifact attestation (future: signed manifests).
+Canonical hash: SHA-256 over normalized ACTIVE records only (suspended excluded). Fields: domain, classification, rationale, last_review, status (normalized + newline joined). Exposed via CLI `hash` command for audit trails. Planned: signed manifest for attestation.
 
 ### Aggregated Logs (Planned)
 Daily JSON structure (no PII):

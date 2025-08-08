@@ -30,7 +30,8 @@ type Server struct {
 // New creates a new Server bound to addr using the supplied policy.
 func New(addr string, p *policy.Policy) *Server {
 	t := template.New("layout.html").Funcs(template.FuncMap{})
-	tmpl, err := t.ParseFS(templateFS, "templates/layout.html", "templates/root.html", "templates/explain.html")
+	// Parse layout, then explain, then root (root last => its blocks override for landing page)
+	tmpl, err := t.ParseFS(templateFS, "templates/layout.html", "templates/explain.html", "templates/root.html")
 	if err != nil {
 		panic(fmt.Sprintf("template parse error: %v", err))
 	}

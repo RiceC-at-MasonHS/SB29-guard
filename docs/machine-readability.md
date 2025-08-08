@@ -9,7 +9,7 @@ Ensure all critical project documentation and outputs can be parsed programmatic
 | Artifact | Format | Path | Purpose |
 |----------|--------|------|---------|
 | Policy dataset | YAML | `policy/domains.yaml` | Canonical domain list |
-| Policy schema | JSON Schema | `docs/schemas/policy.schema.json` | Validate policy |
+| Policy schema | JSON Schema | `internal/policy/policy.schema.json` | Validate policy (embedded at build) |
 | Requirements | Markdown + embedded key blocks | `docs/requirements.md` | Human + machine extraction |
 | CLI design | Markdown (structured sections) | `docs/cli-design.md` | Generate scaffolding |
 | API contract | Markdown (until OpenAPI) | `docs/api-contract.md` | Basis for OpenAPI generation |
@@ -53,8 +53,8 @@ Canonical form: sort active records by domain; for each record concatenate selec
 1. Lint YAML (policy).
 2. Validate JSON Schema.
 3. Extract requirements & ensure IDs unique & contiguous.
-4. Regenerate OpenAPI; compare with committed version (diff fail if drift).
-5. Run unit tests.
+4. Regenerate OpenAPI (future); compare with committed version (diff fail if drift).
+5. Run unit tests (policy & dnsgen packages must meet coverage gates).
 
 ## Tooling Suggestions
 - Python: `pyyaml`, `jsonschema`.

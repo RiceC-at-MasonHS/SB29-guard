@@ -1,7 +1,7 @@
 # SB29-guard Requirements Specification
 
-Version: 0.1.0 (INITIAL DRAFT)
-Status: Draft
+Version: 0.1.0
+Status: Active (living document; sections marked FUTURE deferred)
 Owner: Project Maintainers (Educator-led)
 Last Updated: 2025-08-08
 
@@ -24,64 +24,52 @@ The system MUST NOT collect or expose personally identifiable information (PII) 
 
 ---
 ## 3. High-Level Overview
-1. Maintain a structured domain policy file (e.g., YAML/JSON/CSV) under version control.
-2. Generate DNS override records for each disallowed domain pointing to a local redirect host IP (IPv4 + optional IPv6) OR use a wildcard CNAME inside an internal override zone.
-3. Redirect host serves an explainer page; it inspects query parameters to render dynamic rationale.
-4. Query parameters include: original_domain, classification, policy_version, timestamp (UTC ISO8601), locale (optional), ref=sb29guard.
-5. System logs ONLY aggregate counts (domain, classification, day) – no user identifiers, no IP retention beyond ephemeral operational logs (<24h, rotation or anonymization required).
+1. Maintain a structured domain policy file (YAML) under version control.
+2. Generate DNS override artifacts (hosts, bind zone, unbound local-zone, RPZ) pointing to redirect IP or host.
+3. Redirect host serves an explainer page using embedded templates; direct parameter model currently `/explain?domain=` (internal lookup planned for FUTURE host header inference).
+4. Page displays domain, classification, rationale (optional), reference (optional), policy version, timestamp.
+5. (FUTURE) Aggregate logging / metrics; current implementation does not persist request events.
 
 ---
 ## 4. Functional Requirements
+Implemented (Current):
 FR-1: Maintain a machine-readable policy file (default: `policy/domains.yaml`).
-FR-2: Each policy record MUST contain: domain (string), classification (enum), rationale (string, teacher-friendly), last_review (date), status (active|suspended), notes (optional), source_ref (optional citation).
-FR-3: Support wildcard domains (e.g., `*.example.com`).
-FR-4: Provide a CLI command to validate the policy file schema.
-FR-5: Provide a CLI command to export DNS zone snippets for: (a) BIND, (b) Windows DNS (zone file), (c) Pi-hole / dnsmasq hosts format, (d) Unbound local-zone directives.
-FR-6: DNS export MUST allow configurable redirect IPv4/IPv6 targets.
-FR-7: Provide an HTTP redirect OR direct resolution to the explainer host (configurable 301/302 or direct A record to web server).
-FR-8: Explainer page MUST accept query parameters; if absent, it should attempt internal mapping by Host header.
-FR-9: Explainer page MUST render: original domain, classification description, human rationale, last review date, policy version, contact/escalation instructions.
-FR-10: Provide localization readiness (string keys; default en-US).
-FR-11: Provide accessibility: WCAG 2.1 AA (semantic HTML, contrast, keyboard nav, ARIA labels as needed).
-FR-12: Provide an optional JSON API endpoint: `GET /api/domain-info?domain=...` returning domain metadata.
-FR-13: Provide an optional lightweight admin/report CLI to aggregate counts by domain & classification from access logs (with privacy constraints).
-FR-14: Provide integrity check: hash (SHA-256) of policy file embedded into generated artifacts.
-FR-15: Provide policy version (semantic) computed from Git tag or content hash.
-FR-16: Provide dry-run mode for DNS export.
-FR-17: Provide unit tests covering schema validation, DNS generation, query parameter parsing.
-FR-18: Provide containerized deployment (Dockerfile + sample compose) for the redirect service.
-FR-19: Support configuration file (YAML) for service settings (`config/app.yaml`).
-FR-20: Provide signed release artifacts (optional future) to ensure tamper detection.
-FR-21: `generate-dns` supports `--format pfSense-unbound` emitting Unbound include fragment with header metadata.
-FR-22: `generate-dns` supports `--format opnsense-unbound` (variant of pfSense format; naming differences only).
-FR-23: `generate-dns` supports `--format infoblox-rpz` (Infoblox‑compatible RPZ zone + optional CSV import variant).
-FR-24: `generate-dns` supports `--format route53-json` producing AWS Route53 change batch JSON for private hosted zone creation/update (idempotent output ordering).
-FR-25: `generate-dns` supports `--format azure-cli` producing Azure CLI script (idempotent) for Private DNS zone record sets.
-FR-26: `generate-dns` supports `--format gcloud-dns` producing Google Cloud DNS transaction script template.
-FR-27: `generate-dns` supports domain-only plain list variant for cloud security products (Umbrella, Cloudflare Gateway) with optional classification suffix as comment.
-FR-28: Add export flag `--classification-filter <CLASS[,CLASS...]>` to restrict output to given classifications (phased rollout).
-FR-29: Add export flag `--inactive-exclude/--no-inactive-exclude` (default exclude) controlling inclusion of suspended records.
-FR-30: Generator writes `dist/dns/manifest.json` enumerating produced artifacts: path, mode, format, sha256, bytes, generated timestamp, policy_version, tool_version.
-FR-31: Support Google Sheets as a policy source (`SB29_POLICY_SOURCE=sheet`) with periodic fetch interval configurable via env var.
-FR-32: Sheets sync performs schema validation and falls back to last known good cache or local file on error.
-FR-33: Provide `.env.example` documenting all environment variables with comments.
-FR-34: Cache each successfully fetched sheet as normalized JSON/YAML with content hash in filename and maintain a `current` symlink/marker file.
-FR-35: Provide CLI command `sb29guard sheet-pull` to force an immediate fetch & validation cycle (dry-run mode optional).
-FR-36: Provide optional write-back of validation errors to a specified Google Sheet tab (future flag, initially placeholder / no-op).
-FR-37: Redact secrets (API keys, credentials) from logs; never print full `.env` contents.
-FR-38: Maintain metrics counter for successful vs failed sheet sync attempts (exposed in logs/metrics if enabled).
-FR-39: Implementation delivered as a single statically linked Go binary (`sb29guard`) providing all subcommands (validate, generate-dns, serve, classify, hash, export-schema, demo-data, sheet-pull) to minimize operational complexity.
-FR-40: Provide integrity command `sb29guard hash --check <artifact>` to verify embedded policy hash comment matches actual file contents (tamper detection).
-FR-41: `serve` mode must support `--read-only-policy` flag rejecting runtime modifications to policy cache (except sheet sync updates) for hardened environments.
-FR-42: Embed static HTML/CSS templates using Go `embed` (no runtime template directory dependency) and allow optional override via env `SB29_TEMPLATE_DIR`.
-FR-43: Provide `--integrity-fail-action exit|warn` controlling behavior when hash mismatch detected at startup.
-FR-44: Provide systemd hardening recommendations output via `sb29guard serve --print-systemd-unit` generating a sample unit with security directives.
-FR-45: Provide container image build (multi-stage Dockerfile) producing distroless and Alpine variants.
-FR-46: Provide `sb29guard generate-dns --dry-run` output to stdout without file writes for CI validation.
-FR-47: Provide wildcard / exact domain matching structure with O(log n) lookup performance for 10k domains.
-FR-48: Provide optional basic rate limiting for admin endpoints (`--admin-rps-limit`), default disabled.
-FR-49: Provide CSP nonce injection for inline critical script/style blocks (if any) or ensure no inline scripts required.
-FR-50: Provide configuration sanity check rejecting redirect IP if it matches a public (non-RFC1918/ULA) space unless `--allow-public-redirect-ip` set (prevent accidental external redirection).
+FR-2: Policy record fields: domain, classification, rationale, last_review, status (+ optional source_ref, notes, expires, tags).
+FR-3: Support wildcard domains (leftmost label `*.`).
+FR-4: CLI command `validate` performs schema + logical validation (strict mode toggle).
+FR-5: CLI command `generate-dns` exports: hosts, bind zone, unbound local-zone, RPZ.
+FR-6: DNS export allows configurable redirect IPv4 (`--redirect-ipv4`) or redirect host (`--redirect-host`).
+FR-14: Integrity hash (SHA-256 canonical over active records) via `hash` command.
+FR-16: `generate-dns --dry-run` prints to stdout.
+FR-17: Unit tests cover schema validation, DNS generation (positive + negative), server handlers, hash, CLI.
+FR-42: Embed static HTML/CSS templates (layout.html, root.html, explain.html, style.css) via Go embed.
+FR-46: Dry-run output supported for CI validation.
+
+Partial / Planned (FUTURE):
+FR-7: HTTP redirect mode toggle (currently direct page only).
+FR-8: Host header inference when params missing.
+FR-9: Additional last review date & contact/escalation dynamic text (basic contact line present).
+FR-10: Localization readiness (strings presently inline English).
+FR-11: Formal accessibility audit & documentation (structure is semantic; needs axe validation) .
+FR-12: JSON API endpoint `/api/domain-info`.
+FR-13: Aggregated counts & reporting CLI.
+FR-18: Container/Dockerfile publishing.
+FR-19: Central config file loader.
+FR-21..27: Additional DNS formats (pfSense, OPNsense, Infoblox, Route53, Azure, GCloud, plain list).
+FR-28: Classification filter flag.
+FR-29: Suspended inclusion toggle (currently suspended excluded from hash & generation logic implicitly; explicit flag pending).
+FR-30: Manifest JSON generation.
+FR-31..38: Sheets integration & metrics.
+FR-39: Additional subcommands (classify, export-schema, etc.).
+FR-40: Hash check command for artifacts.
+FR-41: Read-only policy flag.
+FR-43: Integrity fail action.
+FR-44: Systemd unit generation.
+FR-45: Distroless/Alpine images.
+FR-47: Explicit O(log n) matcher structure (current approach acceptable for present scale; optimization later).
+FR-48: Rate limiting.
+FR-49: CSP nonce injection (not needed sans inline scripts).
+FR-50: Public IP safety check.
 
 ---
 ## 5. Non-Functional Requirements
@@ -138,19 +126,9 @@ Validation Rules:
 ## 7. Redirect Parameter Contract
 When a blocked domain is requested, DNS points to redirect host (e.g., 10.10.10.50). A web server vhost/default site issues (option A) an HTTP 302 to `/explain` with parameters OR (option B) serves dynamic content directly.
 
-Query Parameters (lowercase, kebab or snake consistent - choose snake):
-- original_domain (required)
-- classification (required)
-- policy_version (required)
-- ts (UTC ISO8601)
-- ref = sb29guard (constant marker)
-- locale (optional)
-
-Example URL:
-```
-https://guard.school.local/explain?original_domain=exampletool.com&classification=NO_DPA&policy_version=0.1.0&ts=2025-08-08T12:00:00Z&ref=sb29guard
-```
-If params missing, backend attempts lookup by Host header or SNI (future TLS termination logic).
+Current Parameters:
+- domain (required) – original requested domain.
+Future Parameter Model (deferred): original_domain, classification, policy_version, ts, ref, locale (server currently derives classification from in-memory policy at render time instead of trusting client parameters).
 
 ---
 ## 8. DNS Generation Strategies
@@ -158,7 +136,7 @@ Option A (A Record Override): For each domain/wildcard generate zone override ma
 Option B (CNAME Consolidation): Point each restricted FQDN to `blocked.guard.local.` which resolves to redirect IP (reduces A record duplication).
 Option C (RPZ - Response Policy Zone): Provide RPZ zone file for integration with supported DNS resolvers (Bind/Unbound/PowerDNS). Action = CNAME rewrite to redirect host.
 
-Selectable via CLI flag: `--mode a-record|cname|rpz`.
+Selectable via CLI flags: `--format hosts|bind|unbound|rpz` plus `--mode a-record|cname` (cname for bind/unbound); RPZ is a distinct format.
 
 ---
 ## 9. Logging & Metrics
@@ -226,7 +204,7 @@ TST-10: Removing a domain & regenerating DNS removes its record (idempotent buil
 - Windows DNS: Zone file script import.
 - RPZ: Distribute RPZ zone to recursive resolvers (central management).
 
-Provide example docs for each under `docs/deployment/` (future).
+Example deployment docs added under `docs/deployment/` (bind, unbound, pihole, windows-dns). Additional formats FUTURE.
 
 ---
 ## 15. Future Enhancements (Non-Commitment)
@@ -262,14 +240,15 @@ This document must be reviewed by: (a) Lead Teacher Sponsor, (b) District IT Sec
 ## 20. Implementation Stack Decision
 Language: Go (>=1.22). Rationale: static single binary, cross-compilation (Windows/Linux), minimal runtime deps, strong stdlib for networking & crypto.
 
-### Module Layout (Planned)
-- `internal/policy`: load, normalize, validate, hash
-- `internal/sheets`: fetch & convert Google Sheet rows
-- `internal/dnsgen`: generators (bind, unbound, rpz, hosts, route53-json, etc.)
-- `internal/server`: HTTP server, templates, headers, rate limiting
-- `internal/match`: wildcard + exact matcher
-- `internal/logging`: structured JSON logger
-- `internal/integrity`: hash verification helpers
+### Module Layout (Current / Planned)
+- `internal/policy`: load, normalize, validate, hash (implemented)
+- `internal/dnsgen`: generators (hosts, bind, unbound, rpz implemented)
+- `internal/server`: HTTP server + embedded templates (implemented)
+- `internal/hash`: hashing utility (implemented)
+- `internal/match`: FUTURE dedicated matcher optimization
+- `internal/logging`: FUTURE structured logging package
+- `internal/sheets`: FUTURE sheets ingestion
+- `internal/integrity`: FUTURE integrity verification helpers
 
 ### Security Hardening Points
 - Embed templates & schema (immutability)
@@ -280,12 +259,12 @@ Language: Go (>=1.22). Rationale: static single binary, cross-compilation (Windo
 - Read-only runtime except cache/log paths
 
 ### Build & Release
-- Direct Go tooling (no Makefile) via documented commands in README / TECHNICAL: `go test ./...`, `go build ./cmd/sb29guard`, matrix builds handled in CI workflows.
+- Direct Go tooling (no Makefile) via documented commands in README / TECHNICAL: `go test ./...`, `go build ./cmd/sb29guard`. CI mirrors these steps.
 - Deterministic build flags: `-trimpath -ldflags "-s -w -buildid="` and embed version/hash via `-ldflags "-X main.version=... -X main.commit=..."`.
 
 ### Integrity Strategy
-- Hash normalization (sorted active records) reused across DNS artifact stamping & integrity command.
-- `manifest.json` enumerates artifact hashes for quick verification.
+- Hash normalization (sorted active records) reused across DNS generation & CLI hash command.
+- (FUTURE) `manifest.json` will enumerate artifact hashes.
 
 END IMPLEMENTATION STACK DECISION
 ---

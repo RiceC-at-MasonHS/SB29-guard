@@ -1,7 +1,7 @@
 groupme.com	LEGAL_HOLD	Pending legal/privacy assessment due to chat features	2025-08-08	suspended	TCK-1202	Temporarily suspended pending risk evaluation	2025-12-31	COMMUNICATION,RISK
 # SB29-guard
 
-District-friendly tool to show a clear, plain-language “Why was I redirected?” page when staff or students try to use an online tool without an approved Data Privacy Agreement (SB29 context).
+District-friendly tool to show a clear, plain-language “Why was I redirected?” page when staff or students try to use an online tool without an approved Data Privacy Agreement (SB29 context). All HTML templates & CSS are embedded for a single self‑contained binary.
 
 If you just need to get it running, follow the Quick Start below. For deeper technical details, see `TECHNICAL.md`.
 
@@ -56,7 +56,7 @@ Future versions will allow maintaining the list in a secure Google Sheet instead
 Regenerate the DNS file and deploy to your DNS resolver whenever you change the policy. Keep the redirect IP/host pointing at the server that runs `sb29guard serve`.
 
 ## Integrity / Audit
-You can get a stable hash of the active policy:
+You can get a stable hash of the active policy (excludes suspended entries):
 ```
 sb29guard hash --policy policy/domains.yaml
 ```
@@ -66,13 +66,13 @@ Record that hash if you need an audit trail.
 Pre-built binaries are published on the Releases page. Download the one for your OS, place it on a server (or in a container), and follow Quick Start.
 
 ### Building From Source (Developers)
-Ensure Go 1.22+ is installed, then:
+Ensure Go 1.22+ is installed, then (policy, dns generation, server, and CLI commands all have tests):
 ```
 go test ./...
 go build -trimpath -ldflags "-s -w" ./cmd/sb29guard
 ./sb29guard --help
 ```
-No Makefile required; CI uses the same commands.
+No Makefile required; CI uses the same commands. Per‑package coverage gates focus on critical logic (policy, dns generation). CLI now has basic execution + direct invocation tests.
 
 ## Need More Detail?
 See `TECHNICAL.md` for schema, advanced environment variables, roadmap, and contributor guidance. For branding or page layout changes, read `CUSTOMIZING.md`.

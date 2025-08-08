@@ -100,3 +100,23 @@ func TestSerialStrategies(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateErrors(t *testing.T) {
+	p := testPolicy()
+	// Unsupported format
+	if _, err := Generate(p, Options{Format: "bogus"}); err == nil {
+		t.Fatalf("expected error for unsupported format")
+	}
+	// Hosts missing redirect IPv4
+	if _, err := Generate(p, Options{Format: "hosts"}); err == nil {
+		t.Fatalf("expected error for hosts missing redirect-ipv4")
+	}
+	// Bind a-record missing redirect IPv4
+	if _, err := Generate(p, Options{Format: "bind", Mode: "a-record", RedirectHost: "blocked.example"}); err == nil {
+		t.Fatalf("expected error for bind a-record missing redirect-ipv4")
+	}
+	// RPZ missing redirect host
+	if _, err := Generate(p, Options{Format: "rpz"}); err == nil {
+		t.Fatalf("expected error for rpz missing redirect host")
+	}
+}
