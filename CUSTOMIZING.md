@@ -1,4 +1,5 @@
-# Customizing the Redirect Page
+# Customizing the Redirect Page  
+[README](./README.md) • [Technical Reference](./TECHNICAL.md) • [Contributing](./CONTRIBUTING.md)
 
 Institutions can adjust the HTML and CSS of the redirect (explanation) pages to match branding, accessibility standards, or tone. This guide shows lightweight, safe approaches.
 

@@ -15,7 +15,7 @@ Making blocked ed‑tech domains less confusing (and more transparent) for teach
 
 District‑friendly tool that shows a clear, plain‑language “Why was I redirected?” page when staff or students try a site without an approved Data Privacy Agreement (SB29 context). One small self‑contained binary (HTML & CSS embedded). No tracking. No student data stored. ✨
 
-If you just need to get it running, follow the Quick Start below. For deeper technical details, see `TECHNICAL.md`.
+If you just need to get it running, follow the Quick Start below. For deeper technical details, see the Technical Reference: TECHNICAL.md.
 
 ## What It Does (Plain Language)
 When a blocked site is requested, school DNS points the browser here. The page clearly explains:
@@ -64,8 +64,25 @@ Classifications: `NO_DPA`, `PENDING_REVIEW`, `EXPIRED_DPA`, `LEGAL_HOLD`, `OTHER
 ## Wildcards
 Use `*.trackingwidgets.io` to cover any subdomain like `api.trackingwidgets.io`. The explanation page will match both the base domain and subdomains.
 
-## (Planned) Spreadsheet Input 📊
-Future option to sync from a Google Sheet (see TECHNICAL.md roadmap section).
+## Use a Google Sheet (Published CSV) 📊
+Prefer editing a Google Sheet instead of a YAML file? Publish the sheet as CSV (File → Share → Publish to the web → select the sheet + CSV) and copy the link ending with `output=csv`.
+
+Serving with automatic updates:
+- `sb29guard serve --sheet-csv <csv_url>` automatically checks for updates daily at 11:59 PM (local time) and hot‑swaps the in‑memory policy on success. No restart required.
+- Errors (HTTP/network/validation) are logged as JSON and the server keeps the last good policy.
+- JSON log events: `policy.refresh.scheduled`, `policy.refresh.start`, `policy.refresh.success`, `policy.refresh.error`.
+
+CLI/one‑off usage with the sheet:
+```
+sb29guard validate --sheet-csv "https://docs.google.com/.../output=csv"
+sb29guard hash --sheet-csv "https://docs.google.com/.../output=csv"
+sb29guard generate-dns --sheet-csv "https://docs.google.com/.../output=csv" --format hosts --mode a-record --redirect-ipv4 10.10.10.50 --dry-run
+```
+
+Caching: CSV responses are cached under `./cache/sheets/` using ETag/Last‑Modified. If unchanged, logs show `"source":"csv-cache"`.
+
+Column details (required/optional) and deep‑dive notes live in the Technical Reference under Google Sheets Integration:
+- Technical Reference: [TECHNICAL.md](./TECHNICAL.md#google-sheets-integration-published-csv-%E2%80%93-implemented-v01)
 
 ## Updating DNS 🔁
 Whenever the policy changes:
@@ -94,7 +111,9 @@ go build -trimpath -ldflags "-s -w" ./cmd/sb29guard
 No Makefile. CI mirrors these steps. Core logic (policy, DNS generation) has coverage gates; CLI & server also tested.
 
 ## Need More Detail? 🔍
-See `TECHNICAL.md` (internals, roadmap) and `CUSTOMIZING.md` (branding/templates). Keep this README teacher‑/admin‑friendly.
+- Technical Reference (internals, roadmap, caching details): [TECHNICAL.md](./TECHNICAL.md)
+- Customizing the UI/templates: [CUSTOMIZING.md](./CUSTOMIZING.md)
+- Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## Disclaimer ⚖️
 Helps with transparency & workflow. Does NOT replace district legal review. Always verify with your data privacy / legal team.

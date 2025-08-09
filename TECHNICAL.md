@@ -1,4 +1,5 @@
-## SB29-guard Technical Reference
+## SB29-guard Technical Reference  
+[README](./README.md) • [Customizing](./CUSTOMIZING.md) • [Contributing](./CONTRIBUTING.md)
 
 This document contains advanced / implementation details for developers and technical operators. Non-technical users should start with the simplified `README.md`.
 
@@ -29,23 +30,41 @@ See `internal/policy/policy.schema.json` for authoritative JSON Schema. Key fiel
 | expires | date? | Optional sunset date |
 | tags | array | Optional metadata |
 
-### Google Sheets Integration
-Intended for districts that prefer editing a spreadsheet over Git.
+### Google Sheets Integration (Published CSV – Implemented v0.1)
+Current mechanism uses a published CSV URL (no API keys) provided by Google Sheets “Publish to the web” feature.
 
-Expected columns (header row):
+Usage flags (mutually exclusive with --policy):
 ```
-domain	classification	rationale	last_review	status	source_ref	notes	expires	tags
+sb29guard validate --sheet-csv <csv_url>
+sb29guard hash --sheet-csv <csv_url>
+sb29guard generate-dns --sheet-csv <csv_url> --format hosts --mode a-record --redirect-ipv4 10.10.10.50 --dry-run
+sb29guard serve --sheet-csv <csv_url>
 ```
-Columns not present are treated as empty/optional. Extra columns are ignored (future versions may warn).
+Caching:
+- Files stored under `cache/sheets/<fnvhash>.csv` + metadata JSON (ETag, Last-Modified).
+- Conditional requests (If-None-Match / If-Modified-Since) reduce bandwidth; when unchanged, server prints `source":"csv-cache"`.
+- Safety limits: 5MB max read.
+- Retry/backoff: up to 3 attempts (500ms, 1s, 2s delays) on transient errors.
 
-Sync Flow (planned implementation):
-1. Fetch sheet (API key or service account).
-2. Map rows -> records; normalize lowercase domains.
-3. Validate against JSON Schema.
-4. Compute canonical hash; write cache file `cache/policy.<hash>.json`.
-5. Update pointer `cache/current.json`.
-6. DNS generation / server uses cached structure in memory.
-7. On validation failure fallback to last good cache or local file.
+Server auto-refresh:
+- In `serve` mode with `--sheet-csv`, a background scheduler refreshes the CSV daily at 23:59 local time.
+- On success, server swaps the active policy in-memory using a RWMutex-protected `UpdatePolicy` to avoid races.
+- Failures (HTTP errors, parse/validation) emit structured JSON logs and leave the current policy active.
+- Log events: `policy.refresh.scheduled` (next run time), `policy.refresh.start`, `policy.refresh.success` (records, source csv|csv-cache, version), `policy.refresh.error` (message).
+
+Columns:
+Required: `domain, classification, rationale, last_review, status` (case-insensitive).  
+Optional: `source_ref, notes, expires, tags` (tags comma-separated inside one cell; internally split & sorted).
+
+Validation & Normalization:
+- Domains lowercased, wildcards allowed only as leading label (`*.example.com`).
+- Suspended records excluded from canonical hash and DNS outputs.
+
+Planned Enhancements:
+- Configurable refresh interval/clock time via flag or config file; immediate `--refresh-now` trigger.
+- Error write-back to separate sheet/tab.
+- Classification filtering and explicit suspended inclusion flag.
+- Manifest of CSV provenance (timestamp, hash) for audit.
 
 ### Environment Variables (Planned / Future)
 ```
@@ -60,10 +79,10 @@ SB29_FALLBACK_POLICY=policy/domains.yaml
 ```
 File mode typically only needs the fallback policy path.
 
-### Sample Policy Rows (for Sheets)
+### Sample Policy Rows (Sheets CSV)
 Header:
 ```
-domain	classification	rationale	last_review	status	source_ref	notes	expires	tags
+domain,classification,rationale,last_review,status,source_ref,notes,expires,tags
 ```
 Examples:
 ```
