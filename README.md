@@ -115,6 +115,13 @@ No Makefile. CI mirrors these steps. Core logic (policy, DNS generation) has cov
 - Customizing the UI/templates: [CUSTOMIZING.md](./CUSTOMIZING.md)
 - Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
 
+## License
+SB29-guard is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+- You can use and modify it freely.
+- If you modify and run it as a network service, you must provide the corresponding source to users of the service.
+- You may charge for installation, support, or hosting; the source must remain available under AGPL-3.0.
+- See `LICENSE` for the full terms.
+
 ## Disclaimer ⚖️
 Helps with transparency & workflow. Does NOT replace district legal review. Always verify with your data privacy / legal team.
 
