@@ -71,11 +71,31 @@ jobs:
           thresh=70
           int=${pct%.*}
           if [ "$int" -lt "$thresh" ]; then echo "Coverage below threshold for dnsgen: $pct% < $thresh%" >&2; exit 1; fi
+      - name: Per-Package Coverage (server)
+        run: |
+          go test -count=1 -covermode=atomic -coverprofile=coverage/coverage.server.out ./internal/server
+          line=$(go tool cover -func=coverage/coverage.server.out | tail -n 1)
+          echo "Server: $line"
+          pct=$(echo "$line" | awk '{print $3}' | sed 's/%//')
+          echo "{\"package\":\"internal/server\",\"coverage_percent\":$pct}" > coverage/server.json
+          thresh=85
+          int=${pct%.*}
+          if [ "$int" -lt "$thresh" ]; then echo "Coverage below threshold for server: $pct% < $thresh%" >&2; exit 1; fi
+      - name: Per-Package Coverage (sheets)
+        run: |
+          go test -count=1 -covermode=atomic -coverprofile=coverage/coverage.sheets.out ./internal/sheets
+          line=$(go tool cover -func=coverage/coverage.sheets.out | tail -n 1)
+          echo "Sheets: $line"
+          pct=$(echo "$line" | awk '{print $3}' | sed 's/%//')
+          echo "{\"package\":\"internal/sheets\",\"coverage_percent\":$pct}" > coverage/sheets.json
+          thresh=80
+          int=${pct%.*}
+          if [ "$int" -lt "$thresh" ]; then echo "Coverage below threshold for sheets: $pct% < $thresh%" >&2; exit 1; fi
       - name: Combine Coverage Summaries
         run: |
           echo '{"packages":[' > coverage/summary.json
           first=1
-          for f in coverage/policy.json coverage/dnsgen.json; do
+          for f in coverage/policy.json coverage/dnsgen.json coverage/server.json coverage/sheets.json; do
             if [ $first -eq 0 ]; then echo ',' >> coverage/summary.json; fi
             first=0
             cat "$f" >> coverage/summary.json
@@ -85,6 +105,8 @@ jobs:
             echo "Per-Package Coverage:";
             go tool cover -func=coverage/coverage.policy.out | tail -n 1;
             go tool cover -func=coverage/coverage.dnsgen.out | tail -n 1;
+            go tool cover -func=coverage/coverage.server.out | tail -n 1;
+            go tool cover -func=coverage/coverage.sheets.out | tail -n 1;
           } > coverage/summary.txt
       - name: Upload Split Coverage Artifacts
         uses: actions/upload-artifact@v4
