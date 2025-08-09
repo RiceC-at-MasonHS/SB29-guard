@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "[pre-commit] fmt (staged) + lint + vet + build + tests + coverage gates"
+echo "[pre-commit] fmt (repo) + lint + vet + build + targeted tests + coverage gates"
 
 # Require tools to be present
 if ! command -v golangci-lint >/dev/null 2>&1; then
@@ -20,7 +20,7 @@ fi
 ############################
 # Auto-format all tracked Go files; abort if changes were applied
 ############################
-tracked_go=$(git ls-files '*.go' || true)
+tracked_go=$(git ls-files '*.go' | tr '\\' '/' || true)
 if [ -n "$tracked_go" ]; then
   echo "[pre-commit] Formatting Go files (gofmt -s)"
   echo "$tracked_go" | xargs -r gofmt -s -w
@@ -48,6 +48,20 @@ fi
 go build ./...
 
 # Unit tests with race + overall coverage (mirrors CI)
+############################
+# Determine changed files and packages
+############################
+changed_files=$(git diff --cached --name-only | tr '\\' '/' || true)
+go_changed=$(echo "$changed_files" | grep -E '\.go$' || true)
+
+# Doc-only fast path: if no .go files are staged, skip tests & coverage
+if [ -z "$go_changed" ]; then
+  echo "[pre-commit] No Go changes detected; skipping tests and coverage gates"
+  go build ./...
+  echo "[pre-commit] OK"
+  exit 0
+fi
+
 echo "[pre-commit] Tests (race + coverage)"
 RACE_FLAG=""
 if [ "$(go env CGO_ENABLED)" = "1" ]; then
@@ -58,13 +72,14 @@ fi
 go test ${RACE_FLAG} -coverprofile=coverage.out -covermode=atomic ./...
 
 # Per-package coverage gates
-echo "[pre-commit] Coverage gates"
+echo "[pre-commit] Coverage gates (changed packages)"
 mkdir -p coverage
 
 pkg_cov() {
   name="$1"; pkg="$2"; threshold="$3";
   echo "  - $name ($pkg) >= ${threshold}%"
-  go test -count=1 -covermode=atomic -coverprofile="coverage/coverage.$name.out" "./$pkg"
+  # Drop -count=1 locally to allow cache; CI uses -count=1
+  go test -covermode=atomic -coverprofile="coverage/coverage.$name.out" "./$pkg"
   line=$(go tool cover -func="coverage/coverage.$name.out" | tail -n 1)
   pct=$(echo "$line" | awk '{print $3}' | sed 's/%//')
   int=${pct%.*}
@@ -74,9 +89,15 @@ pkg_cov() {
   fi
 }
 
-pkg_cov policy internal/policy 70
-pkg_cov dnsgen internal/dnsgen 70
-pkg_cov server internal/server 85
-pkg_cov sheets internal/sheets 80
+# Map changed files to known gated packages
+need_policy=$(echo "$go_changed" | grep -E '^internal/policy/' || true)
+need_dnsgen=$(echo "$go_changed" | grep -E '^internal/dnsgen/' || true)
+need_server=$(echo "$go_changed" | grep -E '^internal/server/' || true)
+need_sheets=$(echo "$go_changed" | grep -E '^internal/sheets/' || true)
+
+[ -n "$need_policy" ] && pkg_cov policy internal/policy 70
+[ -n "$need_dnsgen" ] && pkg_cov dnsgen internal/dnsgen 70
+[ -n "$need_server" ] && pkg_cov server internal/server 85
+[ -n "$need_sheets" ] && pkg_cov sheets internal/sheets 80
 
 echo "[pre-commit] OK"
