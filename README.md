@@ -114,6 +114,7 @@ No Makefile. CI mirrors these steps. Core logic (policy, DNS generation) has cov
 - Technical Reference (internals, roadmap, caching details): [TECHNICAL.md](./TECHNICAL.md)
 - Customizing the UI/templates: [CUSTOMIZING.md](./CUSTOMIZING.md)
 - Contributing guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+ - Data Privacy Agreement (template): [docs/dpa.md](./docs/dpa.md)
 
 ## License
 SB29-guard is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
