@@ -1,9 +1,10 @@
 # SB29-guard Generated / Build Artifacts
 
 # Build outputs / compiled binaries
+/.gitignore
 /bin/
 /dist/
-sb29guard
+/sb29guard
 *.exe
 *.exe~
 *.dll
