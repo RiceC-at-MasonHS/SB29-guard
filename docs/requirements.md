@@ -39,6 +39,8 @@ FR-3: Support wildcard domains (leftmost label `*.`).
 FR-4: CLI command `validate` performs schema + logical validation (strict mode toggle).
 FR-5: CLI command `generate-dns` exports: hosts, bind zone, unbound local-zone, RPZ.
 FR-6: DNS export allows configurable redirect IPv4 (`--redirect-ipv4`) or redirect host (`--redirect-host`).
+FR-6a: Published Google Sheets CSV ingestion via `--sheet-csv` with on-disk caching (ETag / Last-Modified).
+FR-6b: In serve mode with `--sheet-csv`, auto-refresh policy daily at 23:59 local time with graceful error handling/logging.
 FR-14: Integrity hash (SHA-256 canonical over active records) via `hash` command.
 FR-16: `generate-dns --dry-run` prints to stdout.
 FR-17: Unit tests cover schema validation, DNS generation (positive + negative), server handlers, hash, CLI.
@@ -59,7 +61,7 @@ FR-21..27: Additional DNS formats (pfSense, OPNsense, Infoblox, Route53, Azure, 
 FR-28: Classification filter flag.
 FR-29: Suspended inclusion toggle (currently suspended excluded from hash & generation logic implicitly; explicit flag pending).
 FR-30: Manifest JSON generation.
-FR-31..38: Sheets integration & metrics.
+FR-31..38: Sheets integration (advanced: periodic sync, metrics, fallback, error write-back) – PARTIAL (published CSV fetch only implemented as FR-6a).
 FR-39: Additional subcommands (classify, export-schema, etc.).
 FR-40: Hash check command for artifacts.
 FR-41: Read-only policy flag.

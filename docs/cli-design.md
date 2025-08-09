@@ -88,6 +88,10 @@ Endpoints:
 - `GET /health` liveness probe (200 + minimal JSON).
 - `GET /metrics` (optional, Prometheus exposition).
 
+Auto-refresh behavior (current):
+- When started with `--sheet-csv`, the server schedules a daily refresh at 23:59 local time.
+- Successful refresh hot-swaps in-memory policy; failures log JSON error events and retain the last known-good policy.
+
 ## classify
 Input: domain string.
 Behavior: Normalize domain, wildcard match, output classification record or not_found.

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/RiceC-at-MasonHS/SB29-guard/internal/policy"
@@ -25,6 +26,7 @@ type Server struct {
 	policy    *policy.Policy
 	tmpl      *template.Template
 	inlineCSS string
+	mu        sync.RWMutex
 }
 
 // New creates a new Server bound to addr using the supplied policy.
@@ -48,16 +50,18 @@ func (s *Server) Start() error {
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_, _ = fmt.Fprintf(w, `{"status":"ok","policy_version":%q}`, s.policy.Version)
+	p := s.getPolicy()
+	_, _ = fmt.Fprintf(w, `{"status":"ok","policy_version":%q}`, p.Version)
 }
 
 func (s *Server) handleRoot(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	p := s.getPolicy()
 	data := map[string]interface{}{
 		"CSS":           s.inlineCSS,
-		"RecordCount":   len(s.policy.Records),
+		"RecordCount":   len(p.Records),
 		"Year":          time.Now().Year(),
-		"PolicyVersion": s.policy.Version,
+		"PolicyVersion": p.Version,
 	}
 	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -81,10 +85,11 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 	}
 	orig = strings.ToLower(strings.TrimSpace(orig))
 	lookupDomain := strings.TrimPrefix(orig, "www.")
-	rec, ok := s.policy.Lookup(lookupDomain)
+	p := s.getPolicy()
+	rec, ok := p.Lookup(lookupDomain)
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
-		_, _ = fmt.Fprintf(w, "<html><body><h1>Not Classified</h1><p>The domain %s is not present in the active policy set.</p><p>Policy Version: %s</p></body></html>", orig, s.policy.Version)
+		_, _ = fmt.Fprintf(w, "<html><body><h1>Not Classified</h1><p>The domain %s is not present in the active policy set.</p><p>Policy Version: %s</p></body></html>", orig, p.Version)
 		return
 	}
 
@@ -101,7 +106,7 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 		"Classification": rec.Classification,
 		"Rationale":      htmlEscape(rec.Rationale),
 		"SourceRef":      htmlEscape(rec.SourceRef),
-		"PolicyVersion":  s.policy.Version,
+		"PolicyVersion":  p.Version,
 		"Now":            time.Now().UTC().Format(time.RFC3339),
 		"Year":           time.Now().Year(),
 	}
@@ -109,6 +114,20 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprintf(w, "template error: %v", err)
 	}
+}
+
+// UpdatePolicy swaps the in-memory policy used by the server.
+func (s *Server) UpdatePolicy(p *policy.Policy) {
+	s.mu.Lock()
+	s.policy = p
+	s.mu.Unlock()
+}
+
+func (s *Server) getPolicy() *policy.Policy {
+	s.mu.RLock()
+	p := s.policy
+	s.mu.RUnlock()
+	return p
 }
 
 func firstNonEmpty(vals ...string) string {
