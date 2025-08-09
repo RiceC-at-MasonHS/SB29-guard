@@ -27,6 +27,14 @@ type Server struct {
 	tmpl      *template.Template
 	inlineCSS string
 	mu        sync.RWMutex
+
+	// refresh/metrics fields
+	refreshMu          sync.RWMutex
+	lastRefreshTime    time.Time
+	lastRefreshSource  string
+	refreshCount       int
+	refreshErrorCount  int
+	lastRefreshError   string
 }
 
 // New creates a new Server bound to addr using the supplied policy.
@@ -40,9 +48,16 @@ func New(addr string, p *policy.Policy) *Server {
 	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: baseCSS}
 }
 
+// NewWithTemplates creates a new Server using caller-supplied templates and CSS.
+// tmpl must include templates named layout.html, explain.html, and root.html.
+func NewWithTemplates(addr string, p *policy.Policy, tmpl *template.Template, css string) *Server {
+	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: css}
+}
+
 // Start begins serving HTTP until the listener stops.
 func (s *Server) Start() error {
 	http.HandleFunc("/health", s.handleHealth)
+	http.HandleFunc("/metrics", s.handleMetrics)
 	http.HandleFunc("/explain", s.handleExplain)
 	http.HandleFunc("/", s.handleRoot)
 	return http.ListenAndServe(s.addr, nil)
@@ -67,6 +82,24 @@ func (s *Server) handleRoot(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprintf(w, "template error: %v", err)
 	}
+}
+
+func (s *Server) handleMetrics(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	p := s.getPolicy()
+	s.refreshMu.RLock()
+	lrTime := s.lastRefreshTime
+	lrSrc := s.lastRefreshSource
+	rCount := s.refreshCount
+	eCount := s.refreshErrorCount
+	lastErr := s.lastRefreshError
+	s.refreshMu.RUnlock()
+	ts := ""
+	if !lrTime.IsZero() {
+		ts = lrTime.UTC().Format(time.RFC3339)
+	}
+	_, _ = fmt.Fprintf(w, `{"status":"ok","policy_version":%q,"records":%d,"last_refresh_time":%q,"last_refresh_source":%q,"refresh_count":%d,"refresh_error_count":%d,"last_refresh_error":%q}`,
+		p.Version, len(p.Records), ts, lrSrc, rCount, eCount, lastErr)
 }
 
 func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +154,25 @@ func (s *Server) UpdatePolicy(p *policy.Policy) {
 	s.mu.Lock()
 	s.policy = p
 	s.mu.Unlock()
+}
+
+// RecordRefreshSuccess records a successful policy refresh with the given source (e.g., "csv" or "csv-cache").
+func (s *Server) RecordRefreshSuccess(source string) {
+	s.refreshMu.Lock()
+	s.lastRefreshTime = time.Now()
+	s.lastRefreshSource = source
+	s.refreshCount++
+	s.lastRefreshError = ""
+	s.refreshMu.Unlock()
+}
+
+// RecordRefreshError records a refresh error message for metrics.
+func (s *Server) RecordRefreshError(msg string) {
+	s.refreshMu.Lock()
+	s.lastRefreshTime = time.Now()
+	s.refreshErrorCount++
+	s.lastRefreshError = msg
+	s.refreshMu.Unlock()
 }
 
 func (s *Server) getPolicy() *policy.Policy {

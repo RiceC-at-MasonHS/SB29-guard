@@ -265,3 +265,23 @@ func TestHandleExplainTemplateError(t *testing.T) {
 		t.Fatalf("expected template error message, got: %s", rr.Body.String())
 	}
 }
+
+func TestMetricsEndpoint(t *testing.T) {
+	srv := newTestServer(t)
+	// Record an error then a success to populate metrics
+	srv.RecordRefreshError("network error")
+	srv.RecordRefreshSuccess("csv-cache")
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	srv.handleMetrics(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	body := rr.Body.String()
+	if !strings.Contains(body, "\"status\":\"ok\"") {
+		t.Fatalf("unexpected metrics body: %s", body)
+	}
+	if !strings.Contains(body, "csv-cache") {
+		t.Fatalf("expected last_refresh_source csv-cache in metrics: %s", body)
+	}
+}
