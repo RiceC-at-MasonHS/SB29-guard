@@ -12,28 +12,21 @@ Response 200:
 ```
 
 ## 2. Explanation Page (HTML)
-GET /explain?original_domain=...&classification=...&policy_version=...&ts=...&ref=sb29guard
+GET /explain?domain=...
 - Renders HTML page.
-- If params missing, server attempts host header lookup.
 
-## 3. Domain Info API
-GET /api/domain-info?domain=<fqdn>
-Responses:
-200 OK
+## 3. Metrics (JSON)
+GET /metrics
 ```
 {
-  "domain": "exampletool.com",
-  "matched_record_domain": "exampletool.com",
-  "classification": "NO_DPA",
-  "rationale": "Vendor has not signed district-approved Digital Privacy Agreement.",
-  "last_review": "2025-08-01",
-  "status": "active",
-  "policy_version": "0.1.0"
+  "policy_version": "0.1.0",
+  "record_count": 245,
+  "last_refresh_time": "2025-08-08T12:00:00Z",
+  "last_refresh_source": "csv|csv-cache",
+  "refresh_count": 3,
+  "refresh_error_count": 0,
+  "last_refresh_error": ""
 }
-```
-404 Not Found
-```
-{"error":"not_found","domain":"unknown.com"}
 ```
 
 ## 4. Aggregated Usage (Admin) [Optional]
@@ -48,10 +41,7 @@ GET /admin/summary?date=YYYY-MM-DD (auth required if enabled)
 }
 ```
 
-## 5. Static Assets
-GET /static/* served from public directory (immutable hash filenames recommended).
-
-## 6. Error Responses (General)
+## 4. Error Responses (General)
 ```
 {"error":"invalid_parameter","detail":"classification missing"}
 ```

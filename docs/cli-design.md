@@ -10,11 +10,10 @@ sb29guard
   validate       Validate policy file against JSON Schema
   generate-dns   Produce DNS artifacts (zone files, hosts, RPZ, etc.)
   serve          Start redirect web service
-  classify       Lookup classification for a domain
   hash           Output normalized policy hash & version metadata
-  export-schema  Print current JSON Schema(s)
-  demo-data      Generate a small sample policy file
-  sheet-pull     Force immediate Google Sheets fetch/validate (if sheet mode)
+  validate       Validate policy (YAML or published CSV)
+  generate-dns   Produce DNS artifacts (hosts/bind/unbound/rpz)
+  serve          Start redirect web service
 ```
 
 ## Global Flags
@@ -75,36 +74,25 @@ Output Header Comment Example:
 
 ## serve
 Flags (override config):
-- `--port <int>`
-- `--redirect-mode direct_page|http_redirect`
-- `--public-dir <path>`
-- `--metrics` (enable metrics endpoint)
-- `--bind 0.0.0.0` (listen address)
+- `--policy <path>` or `--sheet-csv <url>` (data source)
+- `--listen <addr>` (e.g., `:8080`)
+- `--templates <dir>` (override embedded templates/CSS)
+- Refresh scheduling (when using `--sheet-csv`):
+  - `--refresh-at HH:MM` (daily, local time)
+  - `--refresh-every <duration>` (e.g., `30m`, `2h`)
 
 Endpoints:
 - `GET /` human-friendly landing.
 - `GET /explain` explanation page (HTML).
-- `GET /api/domain-info` JSON domain metadata.
 - `GET /health` liveness probe (200 + minimal JSON).
-- `GET /metrics` (optional, Prometheus exposition).
+- `GET /metrics` JSON metrics (policy_version, record_count, refresh stats).
 
 Auto-refresh behavior (current):
 - When started with `--sheet-csv`, the server schedules a daily refresh at 23:59 local time.
 - Successful refresh hot-swaps in-memory policy; failures log JSON error events and retain the last known-good policy.
 
-## classify
-Input: domain string.
-Behavior: Normalize domain, wildcard match, output classification record or not_found.
-JSON Output:
-```
-{
-  "domain": "sub.exampletool.com",
-  "matched_record_domain": "exampletool.com",
-  "classification": "NO_DPA",
-  "policy_version": "0.1.0"
-}
-```
-Exit Codes: 0 found, 3 not found.
+## Notes
+- The service looks up classification from in-memory policy; no public classify command is currently exposed.
 
 ## hash
 Computes canonical hash of sorted active records (domain + classification + rationale + last_review + status + optional fields normalized).
@@ -118,28 +106,8 @@ Prints embedded policy JSON Schema to stdout (machine retrieval), enabling exter
 ## demo-data
 Writes a minimal `domains.yaml` if one does not exist (safe create; refuses overwrite unless `--force`).
 
-## sheet-pull
-Forces a Google Sheet fetch regardless of interval.
-Flags:
-- `--dry-run` Validate fetched data but do not update cache pointer.
-- `--out-cache-dir <dir>` Override `SB29_CACHE_DIR`.
-Output JSON example:
-```
-{
-  "status":"ok",
-  "fetched_at":"2025-08-08T12:00:00Z",
-  "hash":"<sha256>",
-  "record_count":245,
-  "policy_version":"0.1.0",
-  "source":"sheet",
-  "cache_file":"cache/policy.<hash>.json"
-}
-```
-Error JSON:
-```
-{"status":"error","message":"schema validation failed","invalid_rows":3}
-```
-Exit Codes: 0 success, 1 validation error, 2 fetch error.
+## sheet CSV notes
+Published CSV mode uses ETag/Last-Modified caching and retries; metrics record refresh_count and last_refresh_source (csv|csv-cache).
 
 ## JSON Logging Structure
 ```

@@ -5,9 +5,9 @@ Status: Draft
 ## Components
 1. Policy Dataset (YAML) + Schema
 2. CLI Tool (Policy validation, DNS artifact generation, classification lookup, serving redirect service)
-3. Redirect Web Service (Static+Dynamic explanation page, optional API)
+3. Redirect Web Service (Static+Dynamic explanation page, metrics JSON)
 4. DNS Integration Artifacts (BIND, Unbound, Pi-hole, Windows DNS, RPZ)
-5. Logging & Aggregation (in-memory counters, periodic JSON summaries)
+5. Metrics & (future) Aggregation (in-memory counters, optional summaries)
 6. Deployment Assets (Dockerfile, compose, example systemd unit)
 
 ## Flow (Request to Blocked Domain)
@@ -18,8 +18,7 @@ Status: Draft
    a. From query parameters (preferred), OR
    b. Host header lookup if parameters absent.
 5. Response: Explanation page (HTML) or JSON (if API call) with rationale.
-6. In-memory counter increments (domain, classification, minute bucket).
-7. Periodic flush to aggregated log file (no PII).
+6. Metrics counters update (refresh events visible at /metrics).
 
 ## Data Model (Policy Record)
 ```

@@ -97,6 +97,16 @@ dig exampletool.com @127.0.0.1
 # Expect CNAME or A to redirect host
 ```
 
+### Verification checklist
+- DNS returns redirect record:
+  - `dig exampletool.com @<bind-ip>` shows `A 10.10.10.50` (a-record) or `CNAME blocked.guard.local.` (cname/rpz)
+- Web server health:
+  - `GET http://<redirect-host>:8080/health` returns `{ "status": "ok" }`
+  - `GET http://<redirect-host>:8080/metrics` shows `policy_version`, `record_count`, and refresh stats (if using --sheet-csv)
+- Policy version and record count match expectations (compare with CLI `sb29guard hash` or generator output header)
+- TTLs reasonable (e.g., 300s during rollout) and zone reload applied (`rndc reload`)
+- Rollback plan confirmed (previous zone files retained)
+
 ## Logging Considerations
 Disable query logging for standard traffic if not required; rely on aggregated web logs.
 

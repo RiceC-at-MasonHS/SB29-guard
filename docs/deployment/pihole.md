@@ -51,6 +51,16 @@ dig exampletool.com @<pihole-ip>
 ```
 Navigate to blocked domain in browser; expect redirect explanation page.
 
+### Verification checklist
+- DNS returns redirect record:
+  - `dig exampletool.com @<pihole-ip>` shows `A 10.10.10.50`
+- Web server health:
+  - `GET http://<redirect-host>:8080/health` returns `{ "status": "ok" }`
+  - `GET http://<redirect-host>:8080/metrics` shows `policy_version`, `record_count`, and refresh stats
+- Policy version and record count match expectations (compare with CLI `sb29guard hash`)
+- Pi-hole DNS reload applied (`pihole restartdns reload`)
+- Rollback plan confirmed (backup `custom.list` retained)
+
 ## Updating
 Automate via cron or CI pipeline:
 ```

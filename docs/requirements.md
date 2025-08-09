@@ -40,11 +40,12 @@ FR-4: CLI command `validate` performs schema + logical validation (strict mode t
 FR-5: CLI command `generate-dns` exports: hosts, bind zone, unbound local-zone, RPZ.
 FR-6: DNS export allows configurable redirect IPv4 (`--redirect-ipv4`) or redirect host (`--redirect-host`).
 FR-6a: Published Google Sheets CSV ingestion via `--sheet-csv` with on-disk caching (ETag / Last-Modified).
-FR-6b: In serve mode with `--sheet-csv`, auto-refresh policy daily at 23:59 local time with graceful error handling/logging.
+FR-6b: In serve mode with `--sheet-csv`, auto-refresh policy on a schedule with graceful error handling/logging.
+  - Flags: `--refresh-at HH:MM` (daily) or `--refresh-every <duration>`.
 FR-14: Integrity hash (SHA-256 canonical over active records) via `hash` command.
 FR-16: `generate-dns --dry-run` prints to stdout.
 FR-17: Unit tests cover schema validation, DNS generation (positive + negative), server handlers, hash, CLI.
-FR-42: Embed static HTML/CSS templates (layout.html, root.html, explain.html, style.css) via Go embed.
+FR-42: Embed static HTML/CSS templates (layout.html, root.html, explain.html, style.css) via Go embed; allow runtime override with `--templates <dir>`.
 FR-46: Dry-run output supported for CI validation.
 
 Partial / Planned (FUTURE):
@@ -143,9 +144,8 @@ Selectable via CLI flags: `--format hosts|bind|unbound|rpz` plus `--mode a-recor
 ---
 ## 9. Logging & Metrics
 - Inbound request log (ephemeral): domain, classification, policy_version, minute bucket.
-- Aggregator produces rolling counts and flushes to daily JSON file (e.g., `logs/aggregates/2025-08-08.json`).
+- Aggregator produces rolling counts and flushes to daily JSON file (planned); currently metrics JSON is exposed at `/metrics` (policy version, record count, refresh stats).
 - No raw IPs or user agents persisted beyond in-memory counters.
-- Provide optional Prometheus metrics endpoint (future) guarded by network ACLs.
 
 ---
 ## 10. Security & Privacy Controls
@@ -252,8 +252,8 @@ Pre-push hook simply re-runs pre-commit for defense-in-depth. To skip hooks in e
 
 ---
 ## 18. License & Compliance Notes
-License: (TBD - recommend permissive OSS, e.g., MIT or Apache-2.0) ensuring districts can self-host.
-Include DISCLAIMER: Tool aids but does not guarantee legal compliance; districts must conduct their own legal review.
+License: AGPL-3.0 (GNU Affero General Public License v3). Districts can self-host and modify; if run as a network service with modifications, provide corresponding source to users.
+DISCLAIMER: Tool aids but does not guarantee legal compliance; districts must conduct their own legal review.
 
 ---
 ## 19. Acceptance to Move Forward

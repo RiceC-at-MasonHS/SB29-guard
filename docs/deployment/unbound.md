@@ -58,6 +58,16 @@ unbound-control lookup exampletool.com
 ```
 Expect redirect IP or CNAME chain.
 
+### Verification checklist
+- DNS returns redirect record:
+  - `unbound-control lookup exampletool.com` shows `A 10.10.10.50` or `CNAME blocked.guard.local.`
+- Web server health:
+  - `GET http://<redirect-host>:8080/health` returns `{ "status": "ok" }`
+  - `GET http://<redirect-host>:8080/metrics` shows `policy_version`, `record_count`, and refresh stats
+- Policy version and record count match expectations (compare with CLI `sb29guard hash`)
+- TTLs reasonable (e.g., 300s) and config reload applied (`unbound-control reload`)
+- Rollback plan confirmed (previous conf/zone retained)
+
 ## Performance Considerations
 - Keep total restricted domains list moderate; local-data is in-memory and efficient.
 - Use TTL <=300 for responsive policy changes.

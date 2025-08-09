@@ -30,7 +30,7 @@ See `internal/policy/policy.schema.json` for authoritative JSON Schema. Key fiel
 | expires | date? | Optional sunset date |
 | tags | array | Optional metadata |
 
-### Google Sheets Integration (Published CSV – Implemented v0.1)
+### Google Sheets Integration (Published CSV – Implemented)
 Current mechanism uses a published CSV URL (no API keys) provided by Google Sheets “Publish to the web” feature.
 
 Usage flags (mutually exclusive with --policy):
@@ -47,7 +47,8 @@ Caching:
 - Retry/backoff: up to 3 attempts (500ms, 1s, 2s delays) on transient errors.
 
 Server auto-refresh:
-- In `serve` mode with `--sheet-csv`, a background scheduler refreshes the CSV daily at 23:59 local time.
+- In `serve` mode with `--sheet-csv`, a background scheduler refreshes the CSV.
+- Configure refresh via flags: `--refresh-at HH:MM` (daily, local time) or `--refresh-every <duration>` (e.g., `30m`, `2h`).
 - On success, server swaps the active policy in-memory using a RWMutex-protected `UpdatePolicy` to avoid races.
 - Failures (HTTP errors, parse/validation) emit structured JSON logs and leave the current policy active.
 - Log events: `policy.refresh.scheduled` (next run time), `policy.refresh.start`, `policy.refresh.success` (records, source csv|csv-cache, version), `policy.refresh.error` (message).
@@ -94,10 +95,17 @@ exampletool.com	PENDING_REVIEW	Awaiting initial privacy review	2025-08-08	active
 ```
 
 ### Templating & Embedding
-Runtime UI (root + explanation pages) uses Go `html/template` with three files: `layout.html`, `root.html`, `explain.html` plus `style.css`. All are embedded using `//go:embed` so no external assets are required. Snapshot copies for documentation: `docs/templates/`. Future enhancement: optional `--templates` directory override.
+Runtime UI (root + explanation pages) uses Go `html/template` with three files: `layout.html`, `root.html`, `explain.html` plus `style.css`. All are embedded using `//go:embed` so no external assets are required. Snapshot copies for documentation: `docs/templates/`.
+
+Runtime override: pass `--templates <dir>` to `serve` to load `layout.html`, `root.html`, `explain.html` (and optional `style.css`) from disk instead of the embedded defaults.
 
 ### Coverage Strategy
-CI enforces per-package thresholds (currently 70%+ for `internal/policy`; `internal/dnsgen` tracked similarly). Other packages (server, hash, CLI) have growing coverage but are not yet gate-enforced. Policy, DNS generation, and server negative paths are explicitly tested; hash utility 100%.
+CI enforces per-package thresholds for key packages:
+- internal/policy ≥ 70%
+- internal/dnsgen ≥ 70%
+- internal/server ≥ 85%
+- internal/sheets ≥ 80%
+Local pre-commit mirrors these gates (targeted to changed packages for speed).
 
 ### Hashing & Integrity
 Canonical hash: SHA-256 over normalized ACTIVE records only (suspended excluded). Fields: domain, classification, rationale, last_review, status (normalized + newline joined). Exposed via CLI `hash` command for audit trails. Planned: signed manifest for attestation.
@@ -117,7 +125,7 @@ Daily JSON structure (no PII):
 - Sheet validation feedback loop (write errors to separate tab)
 - Signed artifacts & manifest
 - OpenAPI + richer web UI
-- Metrics endpoint / Prometheus
+- Prometheus exposition format for metrics (basic JSON metrics implemented)
 
 ### Contributing
 1. Fork & branch

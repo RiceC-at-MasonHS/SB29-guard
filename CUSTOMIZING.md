@@ -27,12 +27,12 @@ Cons: Requires Go toolchain and rebuild per change.
 ### 2. Patch CSS Only (Minimal Code Change)
 Edit `internal/server/templates/style.css` directly, then rebuild. All pages will pick up the change because the file is embedded.
 
-### 3. External Template Override (Future Option)
-A future enhancement may allow a runtime flag like:
+### 3. External Template Override (Runtime Flag)
+Use a runtime flag to load templates from disk instead of the embedded defaults:
 ```
 sb29guard serve --templates /etc/sb29guard/templates
 ```
-If present, disk templates would override embedded ones. Track this in the project issues if you need it.
+The directory should contain `layout.html`, `root.html`, `explain.html`, and optionally `style.css`.
 
 ## Accessibility & Usability Tips
 - Maintain sufficient color contrast (WCAG AA: contrast ratio >= 4.5:1 for normal text).

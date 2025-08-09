@@ -93,6 +93,21 @@ sb29guard generate-dns --policy policy/domains.yaml --format hosts --mode a-reco
 ```
 Deploy the refreshed file to your DNS platform.
 
+## Verify deployment ✅
+- DNS returns redirect for a sample domain (platform-specific):
+	- BIND/Unbound: dig exampletool.com @<resolver-ip>
+	- Pi-hole: dig exampletool.com @<pihole-ip>
+	- Windows DNS: Resolve-DnsName exampletool.com -Server <dns-ip>
+- Web server health: GET http://<redirect-host>:8080/health → {"status":"ok"}
+- Metrics: GET http://<redirect-host>:8080/metrics → policy_version, record_count, refresh stats
+- Browser: Visit a blocked domain and confirm the explanation page renders
+
+See platform guides with detailed checklists:
+- BIND: docs/deployment/bind.md
+- Unbound: docs/deployment/unbound.md
+- Pi-hole: docs/deployment/pihole.md
+- Windows DNS: docs/deployment/windows-dns.md
+
 ## Integrity / Audit 🔐
 Stable hash of active (non‑suspended) records:
 ```
