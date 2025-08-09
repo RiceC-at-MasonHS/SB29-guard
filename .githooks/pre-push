@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-push] Re-running pre-commit checks"
+"$(git rev-parse --show-toplevel)/.githooks/pre-commit"
+echo "[pre-push] OK"

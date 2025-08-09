@@ -229,6 +229,27 @@ Example deployment docs added under `docs/deployment/` (bind, unbound, pihole, w
 - Increment policy version only through CI if content hash changed.
 - Provide plain-language rationale for every new domain.
 
+### 17.1 Local Quality Gates (Pre-commit Policy)
+To keep history clean and commits focused, the repository enforces a strict local pre-commit policy that mirrors CI. Enable project hooks once per clone:
+
+```
+git config core.hooksPath .githooks
+```
+
+The pre-commit hook will fail the commit if any of the following checks fail:
+- Formatting: gofmt check (no diffs allowed)
+- Lint: golangci-lint with a 3-minute timeout
+- Static analysis: go vet ./...
+- Build: go build ./...
+- Tests: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+- Coverage gates (per-package minimums):
+  - internal/policy >= 70%
+  - internal/dnsgen >= 70%
+  - internal/server >= 85%
+  - internal/sheets >= 80%
+
+Pre-push hook simply re-runs pre-commit for defense-in-depth. To skip hooks in emergencies, use `--no-verify` and open a follow-up issue to restore quality gates.
+
 ---
 ## 18. License & Compliance Notes
 License: (TBD - recommend permissive OSS, e.g., MIT or Apache-2.0) ensuring districts can self-host.

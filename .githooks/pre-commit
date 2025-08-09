@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] fmt (staged) + lint + vet + build + tests + coverage gates"
+
+# Require tools to be present
+if ! command -v golangci-lint >/dev/null 2>&1; then
+  echo "golangci-lint not found. Install with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8" >&2
+  exit 1
+fi
+if ! command -v go >/dev/null 2>&1; then
+  echo "Go toolchain not found in PATH" >&2
+  exit 1
+fi
+if ! command -v gofmt >/dev/null 2>&1; then
+  echo "gofmt not found in PATH" >&2
+  exit 1
+fi
+
+############################
+# Auto-format all tracked Go files; abort if changes were applied
+############################
+tracked_go=$(git ls-files '*.go' || true)
+if [ -n "$tracked_go" ]; then
+  echo "[pre-commit] Formatting Go files (gofmt -s)"
+  echo "$tracked_go" | xargs -r gofmt -s -w
+  # If formatting changed files, ask user to review & commit formatting first
+  if ! git diff --quiet -- $tracked_go; then
+    echo "[pre-commit] Applied formatting changes. Review 'git diff', stage them, then commit again." >&2
+    exit 1
+  fi
+fi
+
+############################
+# Lint and vet
+############################
+golangci-lint run --timeout=3m
+go vet ./...
+
+# Fmt check (repo) to mirror CI
+fmt_out=$(gofmt -l . | grep -v '^vendor/' || true)
+if [ -n "$fmt_out" ]; then
+  echo "Go files not formatted:" >&2
+  echo "$fmt_out" >&2
+  exit 1
+fi
+
+go build ./...
+
+# Unit tests with race + overall coverage (mirrors CI)
+echo "[pre-commit] Tests (race + coverage)"
+RACE_FLAG=""
+if [ "$(go env CGO_ENABLED)" = "1" ]; then
+  RACE_FLAG="-race"
+else
+  echo "[pre-commit] CGO disabled; running tests without -race"
+fi
+go test ${RACE_FLAG} -coverprofile=coverage.out -covermode=atomic ./...
+
+# Per-package coverage gates
+echo "[pre-commit] Coverage gates"
+mkdir -p coverage
+
+pkg_cov() {
+  name="$1"; pkg="$2"; threshold="$3";
+  echo "  - $name ($pkg) >= ${threshold}%"
+  go test -count=1 -covermode=atomic -coverprofile="coverage/coverage.$name.out" "./$pkg"
+  line=$(go tool cover -func="coverage/coverage.$name.out" | tail -n 1)
+  pct=$(echo "$line" | awk '{print $3}' | sed 's/%//')
+  int=${pct%.*}
+  if [ "$int" -lt "$threshold" ]; then
+    echo "Coverage below threshold for $name: $pct% < ${threshold}%" >&2
+    exit 1
+  fi
+}
+
+pkg_cov policy internal/policy 70
+pkg_cov dnsgen internal/dnsgen 70
+pkg_cov server internal/server 85
+pkg_cov sheets internal/sheets 80
+
+echo "[pre-commit] OK"

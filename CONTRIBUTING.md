@@ -1,22 +1,42 @@
-# Contributing  
+# Contributing
 [README](./README.md) • [Technical Reference](./TECHNICAL.md) • [Customizing](./CUSTOMIZING.md)
 
 Thanks for your interest!
 
 - Open issues with clear context and repro steps.
 - Run tests locally: `go test ./...`
-- Follow Go formatting and linting (CI will verify).
 - Keep PRs focused and reference requirement IDs from `docs/requirements.md` when applicable.
 - For templates/branding changes, see `CUSTOMIZING.md`.
 
-## Development Quickstart
-- Go 1.22+
-- Build: `go build ./cmd/sb29guard`
-- Run server: `sb29guard serve --policy policy/domains.yaml` or `--sheet-csv <csv_url>`
+## Development quickstart
+- Install Go 1.22+
+- Optional: install golangci-lint locally
+	- `go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8`
+- Enable repo hooks (once per clone):
+	- `git config core.hooksPath .githooks`
 
-## Tests & Coverage
-We maintain per-package coverage gates in CI for critical packages. Please add tests alongside changes.
-See badges and coverage summaries in CI artifacts.
+## Required local quality gates (pre-commit)
+Commits will be blocked unless all of the following pass:
+- Auto-format staged Go files (gofmt -s -w)
+- Formatting check on staged files
+- golangci-lint (3m timeout)
+- go vet ./...
+- go build ./...
+- go test -race -coverprofile=coverage.out -covermode=atomic ./...
+- Per-package coverage minimums:
+	- internal/policy ≥ 70%
+	- internal/dnsgen ≥ 70%
+	- internal/server ≥ 85%
+	- internal/sheets ≥ 80%
+
+Pre-push re-runs pre-commit for defense-in-depth.
+
+Windows notes:
+- Hooks are bash scripts run via Git Bash; they work fine from PowerShell as long as Git Bash is installed.
+- On Windows without a C toolchain, tests run without -race (CGO disabled). CI will still run -race on Linux.
+
+## Tests & coverage in CI
+CI mirrors the local checks and publishes coverage artifacts.
 
 ## License
 By contributing, you agree that your contributions will be licensed under the AGPL-3.0 (see `LICENSE`).

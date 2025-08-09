@@ -207,14 +207,14 @@ func scheduleCSVRefresh(srv *server.Server, csvURL, at string, every time.Durati
 		}
 	} else {
 		// Parse HH:MM
-	hour, minute := 23, 59
+		hour, minute := 23, 59
 		if len(at) >= 4 {
 			if t, err := time.Parse("15:04", at); err == nil {
-		hour, minute = t.Hour(), t.Minute()
+				hour, minute = t.Hour(), t.Minute()
 			}
 		}
 		for {
-	    next := nextDailyTime(hour, minute)
+			next := nextDailyTime(hour, minute)
 			fmt.Printf("{\"event\":\"policy.refresh.scheduled\",\"next\":%q}\n", next.Format(time.RFC3339))
 			time.Sleep(time.Until(next))
 			doRefresh()
