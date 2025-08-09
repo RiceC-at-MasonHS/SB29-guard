@@ -56,6 +56,18 @@ When a blocked site is requested, school DNS points the browser here. The page c
 7. Open:
 	`http://localhost:8080/explain?domain=exampletool.com`
 
+### Law link customization
+The footer’s “Ohio SB29” points to an internal `/law` redirect. By default, it redirects to the LIS PDF for SB29. You can change the target via an environment variable:
+
+```
+# PowerShell (Windows)
+$env:SB29_LAW_URL = "https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/"
+
+# Bash (Linux/macOS)
+export SB29_LAW_URL="https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/"
+```
+Restart the server after changing the variable.
+
 ## Add / Update a Domain 🧾
 Edit `policy/domains.yaml`. Duplicate an existing record and change the domain.
 

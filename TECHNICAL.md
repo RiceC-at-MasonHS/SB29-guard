@@ -77,6 +77,7 @@ SB29_GOOGLE_CREDENTIALS_JSON=./secrets/service-account.json
 SB29_SHEET_FETCH_INTERVAL_SEC=300
 SB29_CACHE_DIR=./cache
 SB29_FALLBACK_POLICY=policy/domains.yaml
+SB29_LAW_URL=https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/
 ```
 File mode typically only needs the fallback policy path.
 
@@ -95,9 +96,9 @@ exampletool.com	PENDING_REVIEW	Awaiting initial privacy review	2025-08-08	active
 ```
 
 ### Templating & Embedding
-Runtime UI (root + explanation pages) uses Go `html/template` with three files: `layout.html`, `root.html`, `explain.html` plus `style.css`. All are embedded using `//go:embed` so no external assets are required. Snapshot copies for documentation: `docs/templates/`.
+Runtime UI (root + explanation pages) uses Go `html/template` with three files: `layout.html`, `root.html`, `explain.html`. CSS is embedded inline by default (no external request). Snapshot copies for documentation: `docs/templates/`.
 
-Runtime override: pass `--templates <dir>` to `serve` to load `layout.html`, `root.html`, `explain.html` (and optional `style.css`) from disk instead of the embedded defaults.
+Runtime override: pass `--templates <dir>` to `serve` to load `layout.html`, `root.html`, `explain.html` from disk. If a `style.css` is present in that directory, it will replace the built-in inline CSS.
 
 ### Coverage Strategy
 CI enforces per-package thresholds for key packages:

@@ -5,11 +5,11 @@ Institutions can adjust the HTML and CSS of the redirect (explanation) pages to 
 
 ## What Ships by Default
 Templates (embedded at build time) live in `internal/server/templates/`:
-  - `layout.html` – base page structure (includes `<head>`, header, footer, shared CSS variable slot)
+  - `layout.html` – base page structure (includes `<head>`, header, footer)
   - `root.html` – landing page (`/`)
   - `explain.html` – explanation / redirect page (`/explain`)
 
-Styling lives in `internal/server/templates/style.css` and is embedded (no extra HTTP request). The content is exposed to templates as the `CSS` variable.
+Styling ships inline by default (no extra HTTP request). When using `--templates <dir>`, you can provide a `style.css` in that directory to override the inline defaults; the server will inject its contents into the `<style>` tag.
 
 Snapshot copies for reference (not used at runtime) are stored under `docs/templates/` so you can review or diff template changes without digging into internal code paths.
 
@@ -25,7 +25,7 @@ Pros: Single self‑contained binary.
 Cons: Requires Go toolchain and rebuild per change.
 
 ### 2. Patch CSS Only (Minimal Code Change)
-Edit `internal/server/templates/style.css` directly, then rebuild. All pages will pick up the change because the file is embedded.
+Edit the `defaultCSS` string in `internal/server/server.go`, then rebuild. All pages will pick up the change because CSS is embedded inline.
 
 ### 3. External Template Override (Runtime Flag)
 Use a runtime flag to load templates from disk instead of the embedded defaults:

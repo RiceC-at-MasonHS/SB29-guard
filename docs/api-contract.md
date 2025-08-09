@@ -29,7 +29,11 @@ GET /metrics
 }
 ```
 
-## 4. Aggregated Usage (Admin) [Optional]
+## 4. Law Redirect
+GET /law
+- 302 redirect to configured law URL (default: LIS PDF for SB29). Target can be overridden via `SB29_LAW_URL` environment variable.
+
+## 5. Aggregated Usage (Admin) [Optional]
 GET /admin/summary?date=YYYY-MM-DD (auth required if enabled)
 ```
 {
@@ -41,7 +45,7 @@ GET /admin/summary?date=YYYY-MM-DD (auth required if enabled)
 }
 ```
 
-## 4. Error Responses (General)
+## 6. Error Responses (General)
 ```
 {"error":"invalid_parameter","detail":"classification missing"}
 ```
@@ -55,8 +59,7 @@ Applied to all HTML/JSON:
 - Cache-Control: no-store
 
 ## 8. Content Negotiation
-- `Accept: application/json` forces JSON for domain-info.
-- Explanation page always text/html.
+Explanation page is text/html.
 
 ## 9. Rate Limiting (Future)
 Optional basic IP rate limiting for admin endpoints only.

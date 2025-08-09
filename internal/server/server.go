@@ -130,7 +130,7 @@ func (s *Server) handleRoot(w http.ResponseWriter, _ *http.Request) {
 		"PolicyVersion":   p.Version,
 		"Page":            "root",
 		"OhioASCII":       s.ohioASCII,
-		// Point footer link to internal redirect for stability
+		// Footer law link uses internal redirect for stability
 		"LawURL": "/law",
 	}
 	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
@@ -202,7 +202,7 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 		"Year":            time.Now().Year(),
 		"Page":            "explain",
 		"OhioASCII":       s.ohioASCII,
-		// Point footer link to internal redirect for stability
+		// Footer law link uses internal redirect for stability
 		"LawURL": "/law",
 	}
 	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {

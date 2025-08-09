@@ -7,13 +7,10 @@ Binary Name: `sb29guard`
 ## Command Overview
 ```
 sb29guard
-  validate       Validate policy file against JSON Schema
-  generate-dns   Produce DNS artifacts (zone files, hosts, RPZ, etc.)
-  serve          Start redirect web service
-  hash           Output normalized policy hash & version metadata
   validate       Validate policy (YAML or published CSV)
   generate-dns   Produce DNS artifacts (hosts/bind/unbound/rpz)
   serve          Start redirect web service
+  hash           Output normalized policy hash & version metadata
 ```
 
 ## Global Flags
@@ -84,6 +81,7 @@ Flags (override config):
 Endpoints:
 - `GET /` human-friendly landing.
 - `GET /explain` explanation page (HTML).
+- `GET /law` 302 to configured law URL (default LIS PDF; override via SB29_LAW_URL).
 - `GET /health` liveness probe (200 + minimal JSON).
 - `GET /metrics` JSON metrics (policy_version, record_count, refresh stats).
 
