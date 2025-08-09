@@ -127,6 +127,7 @@ See platform guides with detailed checklists:
 - Pi-hole: docs/deployment/pihole.md
 - Windows DNS: docs/deployment/windows-dns.md
  - Implementers (VM/Containers/HTTPS): docs/implementers/
+ - Easy‑mode (recommended, auto‑HTTPS): easy-mode/ (Caddy + Docker Compose)
 
 ## Integrity / Audit 🔐
 Stable hash of active (non‑suspended) records:

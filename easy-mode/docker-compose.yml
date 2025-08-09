@@ -1,0 +1,34 @@
+version: '3.9'
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: sb29-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SB29_DOMAIN=${SB29_DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - sb29guard
+  sb29guard:
+    image: ghcr.io/your-org/sb29-guard:latest
+    container_name: sb29guard
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      - SB29_LAW_URL=${SB29_LAW_URL:-https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/}
+      # Leave fallback off by default; caddy injects headers
+      - SB29_ALLOW_HOST_FALLBACK=${SB29_ALLOW_HOST_FALLBACK:-false}
+    command: ["serve","--policy","/app/policy/domains.yaml"]
+    volumes:
+      - ./policy:/app/policy:ro
+volumes:
+  caddy-data: {}
+  caddy-config: {}
