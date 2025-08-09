@@ -2,7 +2,9 @@
 
 # SB29-guard 🚦📘
 
-Making blocked ed‑tech domains less confusing (and more transparent) for teachers & students.
+Making blocked ed‑tech domains less confusing (and more transparent) for teachers & students. Protecting student data is a noble objective, and can be done in ways that lift up our communities. 
+
+<em>Built by a teacher, for teachers — to protect educators, reduce friction, and make compliance humane.</em>
 
 <!-- Badges -->
 [![Build](https://github.com/RiceC-at-MasonHS/SB29-guard/actions/workflows/ci.yml/badge.svg)](../../actions)
