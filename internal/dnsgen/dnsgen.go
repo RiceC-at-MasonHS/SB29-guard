@@ -1,4 +1,4 @@
-// Package dnsgen generates DNS artifacts (hosts, BIND, Unbound, RPZ) from the policy.
+// Package dnsgen generates DNS artifacts (hosts, BIND, Unbound, RPZ, dnsmasq, domain-list, Windows DNS PowerShell) from the policy.
 package dnsgen
 
 import (
@@ -45,6 +45,12 @@ func Generate(p *policy.Policy, o Options) ([]byte, error) {
 		return genUnbound(records, p, o)
 	case "rpz":
 		return genRPZ(records, p, o)
+	case "dnsmasq":
+		return genDnsmasq(records, o)
+	case "domain-list":
+		return genDomainList(records)
+	case "winps":
+		return genWinPS(records, p, o)
 	default:
 		return nil, fmt.Errorf("unsupported format: %s", o.Format)
 	}
@@ -132,6 +138,83 @@ func genRPZ(recs []policy.Record, p *policy.Policy, o Options) ([]byte, error) {
 	}
 	if o.RedirectIPv4 != "" {
 		fmt.Fprintf(&b, "%s. A %s\n", o.RedirectHost, o.RedirectIPv4)
+	}
+	return []byte(b.String()), nil
+}
+
+// genDnsmasq outputs dnsmasq config lines.
+// a-record mode: address=/example.com/10.10.10.50
+// cname mode: cname=example.com,blocked.guard.local
+func genDnsmasq(recs []policy.Record, o Options) ([]byte, error) {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# sb29guard format=dnsmasq mode=%s\n", o.Mode)
+	switch o.Mode {
+	case "a-record":
+		if o.RedirectIPv4 == "" {
+			return nil, errors.New("redirect-ipv4 required for dnsmasq a-record mode")
+		}
+		for _, r := range recs {
+			name := strings.TrimPrefix(r.Domain, "*.")
+			fmt.Fprintf(&b, "address=/%s/%s\n", name, o.RedirectIPv4)
+		}
+	case "cname":
+		if o.RedirectHost == "" {
+			return nil, errors.New("redirect-host required for dnsmasq cname mode")
+		}
+		for _, r := range recs {
+			name := strings.TrimPrefix(r.Domain, "*.")
+			fmt.Fprintf(&b, "cname=%s,%s\n", name, o.RedirectHost)
+		}
+	default:
+		return nil, fmt.Errorf("unsupported mode for dnsmasq: %s", o.Mode)
+	}
+	return []byte(b.String()), nil
+}
+
+// genDomainList outputs one domain per line (wildcards stripped), for adlist-style consumers.
+func genDomainList(recs []policy.Record) ([]byte, error) {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# sb29guard format=domain-list\n")
+	for _, r := range recs {
+		name := strings.TrimPrefix(r.Domain, "*.")
+		fmt.Fprintf(&b, "%s\n", name)
+	}
+	return []byte(b.String()), nil
+}
+
+// genWinPS emits a PowerShell script to create per-domain zones and A/CNAME records on Windows DNS.
+func genWinPS(recs []policy.Record, p *policy.Policy, o Options) ([]byte, error) {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# sb29guard format=winps mode=%s policy_version=%s\n", o.Mode, p.Version)
+	fmt.Fprintf(&b, "$ErrorActionPreference = 'Stop'\n")
+	// Parameters baked-in from options for simplicity
+	if o.TTL <= 0 {
+		o.TTL = 300
+	}
+	fmt.Fprintf(&b, "$ttl = New-TimeSpan -Seconds %d\n", o.TTL)
+	switch o.Mode {
+	case "a-record":
+		if o.RedirectIPv4 == "" {
+			return nil, errors.New("redirect-ipv4 required for winps a-record mode")
+		}
+		fmt.Fprintf(&b, "$ip = '%s'\n", o.RedirectIPv4)
+		for _, r := range recs {
+			name := strings.TrimPrefix(r.Domain, "*.")
+			fmt.Fprintf(&b, "if (-not (Get-DnsServerZone -Name '%s' -ErrorAction SilentlyContinue)) { Add-DnsServerPrimaryZone -Name '%s' -ZoneFile '%s.dns' -DynamicUpdate None }\n", name, name, name)
+			fmt.Fprintf(&b, "try { Add-DnsServerResourceRecordA -ZoneName '%s' -Name '@' -IPv4Address $ip -TimeToLive $ttl -AllowUpdateAny:$false -CreatePtr:$false } catch {}\n", name)
+		}
+	case "cname":
+		if o.RedirectHost == "" {
+			return nil, errors.New("redirect-host required for winps cname mode")
+		}
+		fmt.Fprintf(&b, "$target = '%s'\n", o.RedirectHost)
+		for _, r := range recs {
+			name := strings.TrimPrefix(r.Domain, "*.")
+			fmt.Fprintf(&b, "if (-not (Get-DnsServerZone -Name '%s' -ErrorAction SilentlyContinue)) { Add-DnsServerPrimaryZone -Name '%s' -ZoneFile '%s.dns' -DynamicUpdate None }\n", name, name, name)
+			fmt.Fprintf(&b, "try { Add-DnsServerResourceRecordCName -ZoneName '%s' -Name '@' -HostNameAlias $target } catch {}\n", name)
+		}
+	default:
+		return nil, fmt.Errorf("unsupported mode for winps: %s", o.Mode)
 	}
 	return []byte(b.String()), nil
 }

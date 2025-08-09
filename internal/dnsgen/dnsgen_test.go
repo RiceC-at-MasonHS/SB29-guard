@@ -81,6 +81,65 @@ func TestGenerateUnbound(t *testing.T) {
 	}
 }
 
+func TestGenerateDnsmasqA(t *testing.T) {
+	p := testPolicy()
+	opt := Options{Format: "dnsmasq", Mode: "a-record", RedirectIPv4: "10.10.10.50"}
+	b, err := Generate(p, opt)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	out := string(b)
+	if !strings.Contains(out, "address=/exampletool.com/10.10.10.50") {
+		t.Fatalf("missing dnsmasq address line")
+	}
+}
+
+func TestGenerateDnsmasqCNAME(t *testing.T) {
+	p := testPolicy()
+	opt := Options{Format: "dnsmasq", Mode: "cname", RedirectHost: "blocked.guard.local"}
+	b, err := Generate(p, opt)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !strings.Contains(string(b), "cname=exampletool.com,blocked.guard.local") {
+		t.Fatalf("missing dnsmasq cname line")
+	}
+}
+
+func TestGenerateDomainList(t *testing.T) {
+	p := testPolicy()
+	b, err := Generate(p, Options{Format: "domain-list"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	s := string(b)
+	if !strings.Contains(s, "exampletool.com") || strings.Contains(s, "*.trackingwidgets.io") {
+		t.Fatalf("domain-list content unexpected: %s", s)
+	}
+}
+
+func TestGenerateWinPS_A(t *testing.T) {
+	p := testPolicy()
+	b, err := Generate(p, Options{Format: "winps", Mode: "a-record", RedirectIPv4: "10.10.10.50"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !strings.Contains(string(b), "Add-DnsServerResourceRecordA") {
+		t.Fatalf("missing A record PS command")
+	}
+}
+
+func TestGenerateWinPS_CNAME(t *testing.T) {
+	p := testPolicy()
+	b, err := Generate(p, Options{Format: "winps", Mode: "cname", RedirectHost: "blocked.guard.local"})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if !strings.Contains(string(b), "Add-DnsServerResourceRecordCName") {
+		t.Fatalf("missing CNAME PS command")
+	}
+}
+
 func TestSerialStrategies(t *testing.T) {
 	p := testPolicy()
 	strategies := []string{"date", "epoch", "hash"}

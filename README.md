@@ -29,7 +29,7 @@ When a blocked site is requested, school DNS points the browser here. The page c
 ## Core Pieces
 * Policy file (YAML) – you edit it; wildcards like `*.example.com` allowed.
 * Explanation page – simple, readable, accessible.
-* DNS outputs – hosts, BIND, Unbound, RPZ to steer blocked domains to this page.
+* DNS outputs – hosts, BIND, Unbound, RPZ, dnsmasq, Windows DNS PowerShell, and domain-list to steer blocked domains to this page.
 
 ## Quick Start (🪄 ~2 minutes)
 1. Copy example policy:
@@ -126,6 +126,7 @@ See platform guides with detailed checklists:
 - Unbound: docs/deployment/unbound.md
 - Pi-hole: docs/deployment/pihole.md
 - Windows DNS: docs/deployment/windows-dns.md
+ - Implementers (VM/Containers/HTTPS): docs/implementers/
 
 ## Integrity / Audit 🔐
 Stable hash of active (non‑suspended) records:
