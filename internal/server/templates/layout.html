@@ -1,4 +1,4 @@
-{{/* Base layout template */}}
+{{/* Base layout template with overridable blocks */}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,10 +8,25 @@
   <style>{{.CSS}}</style>
 </head>
 <body>
-  <header><h1>{{block "header" .}}SB29 Guard{{end}}</h1></header>
+  <header>
+    <h1>{{block "header" .}}SB29 Guard{{end}}</h1>
+  <p class="tagline">Ohio educators and schools working together to support students and safeguard their data privacy</p>
+  </header>
   <main>
-    {{block "content" .}}{{end}}
+    {{template "content_router" .}}
   </main>
-  <footer><small>&copy; {{.Year}} District · Policy v{{.PolicyVersion}}</small></footer>
+  <footer><small>
+    Policy v{{.PolicyVersion}} ·
+  <a href="{{.LawURL}}" target="_blank" rel="noopener noreferrer">Ohio SB29</a> ·
+    <a href="https://github.com/RiceC-at-MasonHS/SB29-guard">GitHub</a> ·
+    <a href="https://github.com/RiceC-at-MasonHS/SB29-guard/blob/main/LICENSE">AGPL-3.0</a>
+  </small></footer>
 </body>
 </html>
+{{define "content_router"}}
+  {{if eq .Page "explain"}}
+    {{template "explain_content" .}}
+  {{else}}
+    {{template "root_content" .}}
+  {{end}}
+{{end}}

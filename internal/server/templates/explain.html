@@ -1,31 +1,37 @@
 {{define "title"}}Blocked: {{.Original}}{{end}}
 {{define "header"}}Access Redirected{{end}}
-{{define "content"}}
-<section class="summary">
-  <h2>Summary</h2>
-  <dl>
-    <dt>Domain</dt><dd>{{.Original}}</dd>
-    <dt>Classification</dt><dd class="badge">{{.Classification}}</dd>
-  </dl>
-</section>
-{{if .Rationale}}
-<section>
-  <h2>Why?</h2>
-  <p>{{.Rationale}}</p>
-</section>
-{{end}}
-{{if .SourceRef}}
-<section>
-  <h2>Reference</h2>
-  <p>{{.SourceRef}}</p>
-</section>
-{{end}}
-<section class="meta">
-  <h2>Meta</h2>
-  <ul>
-    <li>Policy Version: {{.PolicyVersion}}</li>
-    <li>UTC Time: {{.Now}}</li>
-  </ul>
-</section>
-<p class="contact">Contact your instructional technology or data privacy team for questions.</p>
+{{define "explain_content"}}
+<div class="explain-page">
+  <pre class="ohio-ascii" aria-hidden="true">{{.OhioASCII}}</pre>
+  <section class="card">
+    <h2 class="card-title">
+      <span class="muted">Access to</span>
+      <span class="domain">{{.Original}}</span>
+      <span class="muted">is restricted</span>
+    </h2>
+
+    <p class="chips"><span class="badge badge-lg">{{.Classification}}</span></p>
+
+    {{if .Rationale}}
+    <p class="rationale">{{.Rationale}}</p>
+    {{end}}
+
+    {{if .SourceRef}}
+    <p class="source-ref">Reference: {{.SourceRef}}</p>
+    {{end}}
+
+    <dl class="meta-grid">
+      <div>
+        <dt>Policy</dt>
+        <dd>v{{.PolicyVersion}}</dd>
+      </div>
+      <div>
+        <dt>UTC</dt>
+        <dd>{{.Now}}</dd>
+      </div>
+    </dl>
+
+    <p class="contact">Contact your instructional technology or data privacy team for questions.</p>
+  </section>
+</div>
 {{end}}

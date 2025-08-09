@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -14,18 +15,55 @@ import (
 	"github.com/RiceC-at-MasonHS/SB29-guard/internal/policy"
 )
 
-//go:embed templates/*.html
+//go:embed templates/*.html templates/*.txt
 var templateFS embed.FS
 
-//go:embed templates/style.css
-var baseCSS string
+// defaultCSS is the built-in stylesheet served inline; dark by default, mobile-first.
+const defaultCSS = `/* Dark by default, mobile-first */
+:root{color-scheme:dark light;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;--bg:#0f1115;--fg:#e7e9ee;--accent:#62a8ff;--badge:#ff6b60;--panel:#151923;--muted:#9aa4b2;--ring:#2a3342}
+@media (prefers-color-scheme:light){:root{--bg:#ffffff;--fg:#222;--accent:#004c99;--badge:#d9534f;--panel:#f5f7fa;--muted:#5b6673;--ring:#dfe6ef}}
+body{margin:0;background:var(--bg);color:var(--fg);line-height:1.5}
+header,main,footer{max-width:900px;margin:0 auto;padding:1rem}
+header{border-bottom:1px solid #ccc2}
+footer{border-top:1px solid #ccc2;margin-top:2rem;font-size:.85rem;opacity:.85}
+h1{font-size:1.5rem;margin:.2rem 0 .6rem}
+h2{font-size:1.1rem;margin:1rem 0 .5rem}
+code{background:var(--panel);padding:2px 6px;border-radius:6px;font-size:.875em}
+.muted{color:var(--muted)}
+.tagline{margin:.1rem 0 0;color:var(--muted);font-size:.9rem}
+
+/* Explainer layout */
+.explain-page{display:grid;grid-template-columns:1fr;gap:1rem;align-items:start}
+.ohio-ascii{display:none}
+.card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:1rem 1.1rem;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.card-title{margin:.2rem 0 .6rem;font-size:1.2rem;line-height:1.25}
+.card-title .domain{display:inline-block;font-weight:700;color:var(--fg)}
+.rationale{margin:.5rem 0 0}
+.source-ref{margin:.25rem 0 0;font-size:.95rem;color:var(--muted)}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:1rem 0 0}
+.meta-grid div{background:transparent;border:1px dashed var(--ring);border-radius:8px;padding:.5rem .6rem}
+.meta-grid dt{font-weight:600;font-size:.8rem;color:var(--muted);margin:0}
+.meta-grid dd{margin:0;font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace}
+.chips{margin:.4rem 0 .2rem}
+.badge{display:inline-block;padding:.35rem .7rem;background:var(--badge);color:#fff;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.badge-lg{font-size:.85rem}
+
+/* Larger viewports: show decorative ASCII, place beside card */
+@media (min-width: 720px){
+	.explain-page{grid-template-columns:minmax(180px,1fr) minmax(380px,540px);gap:2rem}
+	.ohio-ascii{display:block;white-space:pre;line-height:1;opacity:.18;color:var(--muted);user-select:none}
+	.card{padding:1.25rem 1.4rem}
+	.card-title{font-size:1.35rem}
+}`
 
 // Server hosts HTTP endpoints rendering policy-based explanations.
 type Server struct {
 	addr      string
 	policy    *policy.Policy
 	tmpl      *template.Template
-	inlineCSS string
+	inlineCSS template.CSS
+	ohioASCII string
+	lawURL    string
 	mu        sync.RWMutex
 
 	// refresh/metrics fields
@@ -45,19 +83,29 @@ func New(addr string, p *policy.Policy) *Server {
 	if err != nil {
 		panic(fmt.Sprintf("template parse error: %v", err))
 	}
-	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: baseCSS}
+	ascii := ""
+	if b, err := templateFS.ReadFile("templates/ohio.ascii-art.txt"); err == nil {
+		ascii = string(b)
+	}
+	// Determine law URL target (configurable via env var; stable default to ORC section)
+	law := os.Getenv("SB29_LAW_URL")
+	if strings.TrimSpace(law) == "" {
+		law = "https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/"
+	}
+	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: template.CSS(defaultCSS), ohioASCII: ascii, lawURL: law}
 }
 
 // NewWithTemplates creates a new Server using caller-supplied templates and CSS.
 // tmpl must include templates named layout.html, explain.html, and root.html.
 func NewWithTemplates(addr string, p *policy.Policy, tmpl *template.Template, css string) *Server {
-	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: css}
+	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: template.CSS(css)}
 }
 
 // Start begins serving HTTP until the listener stops.
 func (s *Server) Start() error {
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/metrics", s.handleMetrics)
+	http.HandleFunc("/law", s.handleLaw)
 	http.HandleFunc("/explain", s.handleExplain)
 	http.HandleFunc("/", s.handleRoot)
 	return http.ListenAndServe(s.addr, nil)
@@ -73,10 +121,17 @@ func (s *Server) handleRoot(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	p := s.getPolicy()
 	data := map[string]interface{}{
-		"CSS":           s.inlineCSS,
-		"RecordCount":   len(p.Records),
-		"Year":          time.Now().Year(),
-		"PolicyVersion": p.Version,
+		"CSS":             s.inlineCSS,
+		"Title":           "SB29 Guard",
+		"Header":          "SB29 Guard",
+		"ContentTemplate": "root_content",
+		"RecordCount":     len(p.Records),
+		"Year":            time.Now().Year(),
+		"PolicyVersion":   p.Version,
+		"Page":            "root",
+		"OhioASCII":       s.ohioASCII,
+		// Point footer link to internal redirect for stability
+		"LawURL": "/law",
 	}
 	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -131,22 +186,40 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")
-	w.Header().Set("Content-Security-Policy", "default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';")
+	w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';")
 
 	data := map[string]interface{}{
-		"CSS":            s.inlineCSS,
-		"Original":       orig,
-		"Classification": rec.Classification,
-		"Rationale":      htmlEscape(rec.Rationale),
-		"SourceRef":      htmlEscape(rec.SourceRef),
-		"PolicyVersion":  p.Version,
-		"Now":            time.Now().UTC().Format(time.RFC3339),
-		"Year":           time.Now().Year(),
+		"CSS":             s.inlineCSS,
+		"Title":           fmt.Sprintf("Blocked: %s", orig),
+		"Header":          "Access Redirected",
+		"ContentTemplate": "explain_content",
+		"Original":        orig,
+		"Classification":  rec.Classification,
+		"Rationale":       htmlEscape(rec.Rationale),
+		"SourceRef":       htmlEscape(rec.SourceRef),
+		"PolicyVersion":   p.Version,
+		"Now":             time.Now().UTC().Format(time.RFC3339),
+		"Year":            time.Now().Year(),
+		"Page":            "explain",
+		"OhioASCII":       s.ohioASCII,
+		// Point footer link to internal redirect for stability
+		"LawURL": "/law",
 	}
 	if err := s.tmpl.ExecuteTemplate(w, "layout.html", data); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprintf(w, "template error: %v", err)
 	}
+}
+
+// handleLaw performs a simple redirect to the configured law URL target.
+func (s *Server) handleLaw(w http.ResponseWriter, r *http.Request) {
+	// Security headers consistent with explain
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Referrer-Policy", "no-referrer")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+	target := s.lawURL
+	http.Redirect(w, r, target, http.StatusFound)
 }
 
 // UpdatePolicy swaps the in-memory policy used by the server.

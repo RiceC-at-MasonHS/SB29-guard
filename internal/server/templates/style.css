@@ -1,16 +1,35 @@
-:root{color-scheme:light dark;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;--bg:#ffffff;--fg:#222;--accent:#004c99;--badge:#d9534f;--panel:#f5f7fa}
-@media (prefers-color-scheme:dark){:root{--bg:#121417;--fg:#e6e6e6;--accent:#4da3ff;--badge:#ff6b60;--panel:#1e2329}}
-body{margin:0;background:var(--bg);color:var(--fg);line-height:1.45}
-header,main,footer{max-width:760px;margin:0 auto;padding:1.2rem}
-header{border-bottom:1px solid #ccc1}
-footer{border-top:1px solid #ccc1;margin-top:2rem;font-size:.8rem;opacity:.8}
-h1{font-size:1.6rem;margin:.2rem 0 0.6rem}
-h2{font-size:1.1rem;margin:1.2rem 0 .4rem}
-code{background:var(--panel);padding:2px 5px;border-radius:4px;font-size:.85em}
-dl{display:grid;grid-template-columns:max-content 1fr;gap:.4rem .8rem;margin:0}
-dt{font-weight:600}
-dd{margin:0}
-section.summary{background:var(--panel);padding:1rem;border-radius:8px}
-section.meta ul{list-style:none;padding:0;margin:0}
-section.meta li{margin:.25rem 0}
-.badge{display:inline-block;padding:.25rem .6rem;background:var(--badge);color:#fff;border-radius:1rem;font-size:.75rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+/* Dark by default, mobile-first */
+:root{color-scheme:dark light;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;--bg:#0f1115;--fg:#e7e9ee;--accent:#62a8ff;--badge:#ff6b60;--panel:#151923;--muted:#9aa4b2;--ring:#2a3342}
+@media (prefers-color-scheme:light){:root{--bg:#ffffff;--fg:#222;--accent:#004c99;--badge:#d9534f;--panel:#f5f7fa;--muted:#5b6673;--ring:#dfe6ef}}
+body{margin:0;background:var(--bg);color:var(--fg);line-height:1.5}
+header,main,footer{max-width:900px;margin:0 auto;padding:1rem}
+header{border-bottom:1px solid #ccc2}
+footer{border-top:1px solid #ccc2;margin-top:2rem;font-size:.85rem;opacity:.85}
+h1{font-size:1.5rem;margin:.2rem 0 .6rem}
+h2{font-size:1.1rem;margin:1rem 0 .5rem}
+code{background:var(--panel);padding:2px 6px;border-radius:6px;font-size:.875em}
+.muted{color:var(--muted)}
+
+/* Explainer layout */
+.explain-page{display:grid;grid-template-columns:1fr;gap:1rem;align-items:start}
+.ohio-ascii{display:none}
+.card{background:var(--panel);border:1px solid var(--ring);border-radius:14px;padding:1rem 1.1rem;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.card-title{margin:.2rem 0 .6rem;font-size:1.2rem;line-height:1.25}
+.card-title .domain{display:inline-block;font-weight:700;color:var(--fg)}
+.rationale{margin:.5rem 0 0}
+.source-ref{margin:.25rem 0 0;font-size:.95rem;color:var(--muted)}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:1rem 0 0}
+.meta-grid div{background:transparent;border:1px dashed var(--ring);border-radius:8px;padding:.5rem .6rem}
+.meta-grid dt{font-weight:600;font-size:.8rem;color:var(--muted);margin:0}
+.meta-grid dd{margin:0;font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace}
+.chips{margin:.4rem 0 .2rem}
+.badge{display:inline-block;padding:.35rem .7rem;background:var(--badge);color:#fff;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.badge-lg{font-size:.85rem}
+
+/* Larger viewports: show decorative ASCII, place beside card */
+@media (min-width: 720px){
+	.explain-page{grid-template-columns:minmax(180px,1fr) minmax(380px,540px);gap:2rem}
+	.ohio-ascii{display:block;white-space:pre;line-height:1;opacity:.18;color:var(--muted);user-select:none}
+	.card{padding:1.25rem 1.4rem}
+	.card-title{font-size:1.35rem}
+}

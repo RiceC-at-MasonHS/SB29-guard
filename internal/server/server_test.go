@@ -285,3 +285,21 @@ func TestMetricsEndpoint(t *testing.T) {
 		t.Fatalf("expected last_refresh_source csv-cache in metrics: %s", body)
 	}
 }
+
+func TestHandleLawRedirect(t *testing.T) {
+	srv := newTestServer(t)
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/law", nil)
+	srv.handleLaw(rr, req)
+	if rr.Code != http.StatusFound {
+		t.Fatalf("expected 302 redirect, got %d", rr.Code)
+	}
+	loc := rr.Header().Get("Location")
+	if loc == "" {
+		t.Fatalf("missing Location header")
+	}
+	// Default should be the LIS PDF unless overridden via env
+	if !strings.Contains(loc, "search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/") {
+		t.Fatalf("unexpected law redirect target: %s", loc)
+	}
+}
