@@ -7,7 +7,7 @@ Making blocked ed‑tech domains less confusing (and more transparent) for teach
 <!-- Badges -->
 [![Build](https://github.com/RiceC-at-MasonHS/SB29-guard/actions/workflows/ci.yml/badge.svg)](../../actions)
 ![Go Version](https://img.shields.io/badge/go-1.22+-00ADD8?logo=go)
-![License](https://img.shields.io/badge/license-MIT-blue)
+![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
 ![Status](https://img.shields.io/badge/status-early%20preview-orange)
 ![Coverage](https://img.shields.io/badge/coverage-core%2080%25+-brightgreen)
 

@@ -126,4 +126,4 @@ Daily JSON structure (no PII):
 4. Submit PR referencing requirement IDs (see `docs/requirements.md`).
 
 ### License
-See `LICENSE`.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See `LICENSE` for details.

@@ -17,3 +17,6 @@ Thanks for your interest!
 ## Tests & Coverage
 We maintain per-package coverage gates in CI for critical packages. Please add tests alongside changes.
 See badges and coverage summaries in CI artifacts.
+
+## License
+By contributing, you agree that your contributions will be licensed under the AGPL-3.0 (see `LICENSE`).
