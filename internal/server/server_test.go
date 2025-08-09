@@ -80,6 +80,18 @@ func TestHandleExplainMissingParam(t *testing.T) {
 	}
 }
 
+func TestHostFallbackIsOffByDefault(t *testing.T) {
+	srv := newTestServer(t)
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	// Simulate only Host header present; flag should be off by default
+	req.Host = "exampletool.com"
+	srv.handleExplain(rr, req)
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 when only Host is present and fallback disabled, got %d", rr.Code)
+	}
+}
+
 func TestHandleExplainNotFound(t *testing.T) {
 	srv := newTestServer(t)
 	rr := httptest.NewRecorder()
@@ -87,6 +99,135 @@ func TestHandleExplainNotFound(t *testing.T) {
 	srv.handleExplain(rr, req)
 	if rr.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 got %d", rr.Code)
+	}
+}
+
+func TestExtractOriginalDomainFromHeaders_Precedence(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	// Set multiple headers, ensure precedence: X-Original-Host > X-Forwarded-Host > Referer > Host
+	r.Header.Set("X-Forwarded-Host", "xfw.example, other")
+	r.Header.Set("Referer", "https://ref.example/path?q=1")
+	r.Host = "host.example"
+	if got := extractOriginalDomainFromHeaders(r, false); got != "xfw.example" {
+		t.Fatalf("expected xfw.example, got %s", got)
+	}
+	r.Header.Set("X-Original-Host", "orig.example")
+	if got := extractOriginalDomainFromHeaders(r, false); got != "orig.example" {
+		t.Fatalf("expected orig.example, got %s", got)
+	}
+	r.Header.Del("X-Original-Host")
+	r.Header.Del("X-Forwarded-Host")
+	if got := extractOriginalDomainFromHeaders(r, false); got != "ref.example" {
+		t.Fatalf("expected ref.example from Referer, got %s", got)
+	}
+	r.Header.Del("Referer")
+	if got := extractOriginalDomainFromHeaders(r, false); got != "" {
+		t.Fatalf("expected empty when no informative headers, got %s", got)
+	}
+	// With feature flag, Host is allowed as last resort
+	if got := extractOriginalDomainFromHeaders(r, true); got != "host.example" {
+		t.Fatalf("expected host.example from Host with flag, got %s", got)
+	}
+}
+
+func TestHandleExplain_UsesHeadersWhenNoQueryParam(t *testing.T) {
+	srv := newTestServer(t)
+	// Ensure policy contains a record matching header-derived domain
+	// Modify the test policy to include xfw.example
+	srv.UpdatePolicy(&policy.Policy{Version: "H1", Updated: "2025-08-09", Records: []policy.Record{
+		{Domain: "xfw.example", Classification: "NO_DPA", Rationale: "r", LastReview: "2025-08-01", Status: "active"},
+	}})
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	req.Header.Set("X-Forwarded-Host", "xfw.example")
+	srv.handleExplain(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200, got %d body=%s", rr.Code, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "xfw.example") {
+		t.Fatalf("response did not include derived domain: %s", rr.Body.String())
+	}
+}
+
+func TestHandleExplain_HeaderNormalization(t *testing.T) {
+	srv := newTestServer(t)
+	srv.UpdatePolicy(&policy.Policy{Version: "H2", Updated: "2025-08-09", Records: []policy.Record{
+		{Domain: "exampletool.com", Classification: "NO_DPA", Rationale: "r", LastReview: "2025-08-01", Status: "active"},
+	}})
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	// Include scheme, port, and www.
+	req.Header.Set("Referer", "https://www.exampletool.com:8443/path")
+	srv.handleExplain(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200, got %d body=%s", rr.Code, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "exampletool.com") {
+		t.Fatalf("normalized domain not found in response: %s", rr.Body.String())
+	}
+}
+
+func TestHeaderWhitespaceCasingAndMultipleHosts(t *testing.T) {
+	// Ensure trimming and case-folding of header-derived values happens downstream
+	r := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	r.Header.Set("X-Forwarded-Host", "  XFW.EXAMPLE:443  , ignored.example ")
+	got := extractOriginalDomainFromHeaders(r, false)
+	if strings.TrimSpace(got) != "XFW.EXAMPLE:443" { // raw extract preserves case/port; normalization happens later in handler
+		t.Fatalf("unexpected raw header extraction: %q", got)
+	}
+	// Referer with trailing spaces
+	r = httptest.NewRequest(http.MethodGet, "/explain", nil)
+	r.Header.Set("Referer", " https://Ref.Example:443/path ")
+	got = extractOriginalDomainFromHeaders(r, false)
+	if got != "Ref.Example:443" {
+		t.Fatalf("unexpected referer host extract: %q", got)
+	}
+}
+
+func TestNormalizeHostPortAndWWW(t *testing.T) {
+	srv := newTestServer(t)
+	srv.UpdatePolicy(&policy.Policy{Version: "H3", Updated: "2025-08-09", Records: []policy.Record{{Domain: "ref.example", Classification: "NO_DPA", Rationale: "r", LastReview: "2025-08-01", Status: "active"}}})
+	// Case: X-Forwarded-Host includes port; handler should strip port and lowercase, then trim www.
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	req.Header.Set("X-Forwarded-Host", "WWW.Ref.Example:443")
+	srv.handleExplain(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "ref.example") {
+		t.Fatalf("expected normalized domain in response: %s", rr.Body.String())
+	}
+}
+
+func TestIPv6BracketPortHandling_NoLookup(t *testing.T) {
+	srv := newTestServer(t)
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/explain", nil)
+	// Not expected in our flow, but ensure no panic: bracketed IPv6 with port
+	req.Header.Set("X-Original-Host", "[2001:db8::1]:8080")
+	srv.handleExplain(rr, req)
+	// No policy for IPv6, expect 404 Not Found
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 when extracted host not in policy, got %d", rr.Code)
+	}
+}
+
+func TestQueryParamPrecedenceOverHeaders(t *testing.T) {
+	srv := newTestServer(t)
+	srv.UpdatePolicy(&policy.Policy{Version: "H4", Updated: "2025-08-09", Records: []policy.Record{
+		{Domain: "param.example", Classification: "NO_DPA", Rationale: "r", LastReview: "2025-08-01", Status: "active"},
+		{Domain: "header.example", Classification: "NO_DPA", Rationale: "r", LastReview: "2025-08-01", Status: "active"},
+	}})
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/explain?domain=param.example", nil)
+	req.Header.Set("X-Forwarded-Host", "header.example")
+	srv.handleExplain(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "param.example") {
+		t.Fatalf("expected body to reflect query param domain, got: %s", rr.Body.String())
 	}
 }
 

@@ -26,7 +26,7 @@ The system MUST NOT collect or expose personally identifiable information (PII) 
 ## 3. High-Level Overview
 1. Maintain a structured domain policy file (YAML) under version control.
 2. Generate DNS override artifacts (hosts, bind zone, unbound local-zone, RPZ) pointing to redirect IP or host.
-3. Redirect host serves an explainer page using embedded templates; direct parameter model currently `/explain?domain=` (internal lookup planned for FUTURE host header inference).
+3. Redirect host serves an explainer page using embedded templates. The original domain is derived from either the query parameter (`/explain?domain=` etc.) or, when absent (DNS redirect typical), inferred from HTTP headers with defined precedence.
 4. Page displays domain, classification, rationale (optional), reference (optional), policy version, timestamp.
 5. (FUTURE) Aggregate logging / metrics; current implementation does not persist request events.
 
@@ -47,10 +47,14 @@ FR-16: `generate-dns --dry-run` prints to stdout.
 FR-17: Unit tests cover schema validation, DNS generation (positive + negative), server handlers, hash, CLI.
 FR-42: Embed static HTML/CSS templates (layout.html, root.html, explain.html, style.css) via Go embed; allow runtime override with `--templates <dir>`.
 FR-46: Dry-run output supported for CI validation.
+FR-8: Header-based domain inference when query parameters are missing. The service MUST resolve the intended original domain using HTTP headers in this order (first match wins):
+  - `X-Original-Host`
+  - `X-Forwarded-Host` (first value if comma-separated)
+  - `Referer` (host portion)
+  Normalization rules: lowercase the host, strip URL scheme if present, trim any port (e.g., `:443`), and drop a leading `www.` label for lookup purposes. If no parameter or header yields a domain, return HTTP 400 with a clear message. When query parameters are present, they take precedence over headers.
 
 Partial / Planned (FUTURE):
 FR-7: HTTP redirect mode toggle (currently direct page only).
-FR-8: Host header inference when params missing.
 FR-9: Additional last review date & contact/escalation dynamic text (basic contact line present).
 FR-10: Localization readiness (strings presently inline English).
 FR-11: Formal accessibility audit & documentation (structure is semantic; needs axe validation) .
@@ -133,6 +137,11 @@ Current Parameters:
 - domain (required) – original requested domain.
 Future Parameter Model (deferred): original_domain, classification, policy_version, ts, ref, locale (server currently derives classification from in-memory policy at render time instead of trusting client parameters).
 
+Header Inference (Implemented):
+- If no query parameter is provided, the service infers the domain using headers in this precedence order: `X-Original-Host`, `X-Forwarded-Host` (first value), `Referer` (host).
+- Normalization: lowercase, strip scheme and port, drop leading `www.` for lookup.
+- If nothing yields a domain, respond 400 with guidance to provide `?domain=` for manual testing.
+
 ---
 ## 8. DNS Generation Strategies
 Option A (A Record Override): For each domain/wildcard generate zone override mapping to redirect IP.
@@ -198,6 +207,10 @@ TST-7: Unit test coverage >= 80% for policy parsing & DNS generation modules.
 TST-8: Container image passes vulnerability scan (no critical CVEs) at build time.
 TST-9: Logging aggregator produces daily summary file with expected JSON schema.
 TST-10: Removing a domain & regenerating DNS removes its record (idempotent build).
+TST-11: Header precedence: Given all headers present, domain resolution follows `X-Original-Host` > `X-Forwarded-Host` (first) > `Referer` (host) > `Host`.
+TST-12: Header normalization: Given `Referer: https://www.ExampleTool.com:8443/path`, the resolved domain is `exampletool.com` and matches policy.
+TST-13: Query parameter precedence: Given both `?domain=param.example` and headers, the service uses the query parameter value.
+TST-14: Missing inputs: When neither query parameter nor informative headers are present, the service returns HTTP 400 with a helpful message.
 
 ---
 ## 14. Deployment Topologies

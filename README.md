@@ -68,6 +68,13 @@ export SB29_LAW_URL="https://search-prod.lis.state.oh.us/api/v2/general_assembly
 ```
 Restart the server after changing the variable.
 
+### How the server knows the original domain
+The explanation page needs to know which domain was blocked:
+- If you call `/explain?domain=example.com`, that value is used.
+- If there’s no query param (typical DNS redirect), the server usually detects the original site automatically from standard headers set by browsers/proxies.
+
+Want the nuts and bolts or special setups (A‑record vs CNAME, reverse proxy headers, optional Host fallback)? See the Technical Reference: [Header‑based domain inference](./TECHNICAL.md#header-based-domain-inference).
+
 ## Add / Update a Domain 🧾
 Edit `policy/domains.yaml`. Duplicate an existing record and change the domain.
 

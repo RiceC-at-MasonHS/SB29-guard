@@ -58,6 +58,10 @@ unbound-control lookup exampletool.com
 ```
 Expect redirect IP or CNAME chain.
 
+Header inference notes:
+- If you deploy as A/AAAA overrides, you can set `SB29_ALLOW_HOST_FALLBACK=true` so the app uses the `Host` header for domain detection.
+- If you deploy via CNAME to a consolidated host, keep Host fallback disabled and add a reverse proxy that injects `X-Original-Host` or `X-Forwarded-Host`.
+
 ### Verification checklist
 - DNS returns redirect record:
   - `unbound-control lookup exampletool.com` shows `A 10.10.10.50` or `CNAME blocked.guard.local.`

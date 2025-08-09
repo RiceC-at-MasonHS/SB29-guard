@@ -97,6 +97,10 @@ dig exampletool.com @127.0.0.1
 # Expect CNAME or A to redirect host
 ```
 
+Header inference notes:
+- A-record override: Enable `SB29_ALLOW_HOST_FALLBACK=true` so the server can use the `Host` header (contains the original domain).
+- CNAME consolidation: Leave Host fallback disabled. To show per-domain context, place a reverse proxy in front of the app and set `X-Original-Host` or `X-Forwarded-Host` to the original queried name.
+
 ### Verification checklist
 - DNS returns redirect record:
   - `dig exampletool.com @<bind-ip>` shows `A 10.10.10.50` (a-record) or `CNAME blocked.guard.local.` (cname/rpz)

@@ -7,6 +7,7 @@ This document contains advanced / implementation details for developers and tech
 - Policy Data Model & Schema
 - Google Sheets Integration Details
 - Environment Variables
+- Header-based domain inference
 - Sample Policy Rows
 - Templating & Embedding
 - Coverage Strategy & Quality Gates
@@ -78,8 +79,38 @@ SB29_SHEET_FETCH_INTERVAL_SEC=300
 SB29_CACHE_DIR=./cache
 SB29_FALLBACK_POLICY=policy/domains.yaml
 SB29_LAW_URL=https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/
+SB29_ALLOW_HOST_FALLBACK=false
 ```
 File mode typically only needs the fallback policy path.
+
+### Header-based domain inference
+When DNS redirects a blocked site to the SB29-guard server, there’s often no query param available. The server infers the original domain from HTTP headers with strict precedence and normalization rules.
+
+Resolution order (first match wins):
+1. X-Original-Host
+2. X-Forwarded-Host (first value if comma-separated)
+3. Referer (host portion only)
+4. Host (optional, last resort; only if SB29_ALLOW_HOST_FALLBACK=true)
+
+Normalization rules applied after extraction:
+- Lowercase the host.
+- Strip port, IPv4 and bracketed IPv6 safe (net.SplitHostPort; remove [ ] for IPv6).
+- Remove a leading `www.` before policy lookup.
+
+Operational guidance:
+- A/AAAA override deployments (each restricted domain points directly to the app’s IP): you may set `SB29_ALLOW_HOST_FALLBACK=true` to allow using the Host header as a last resort. In this mode browsers present the original domain in Host, so fallback is typically safe.
+- CNAME consolidation deployments (all restricted domains CNAME to a single blocked host): leave Host fallback disabled (default). The Host will be the consolidated name, not the original domain. To preserve per-domain context, front the app with a reverse proxy that injects `X-Original-Host` (preferred) or `X-Forwarded-Host`.
+
+Troubleshooting:
+- If /explain returns 400 (missing domain):
+  - Provide `?domain=...` explicitly, or
+  - Ensure your proxy sets `X-Original-Host` or `X-Forwarded-Host`, or
+  - For A/AAAA override setups only, enable `SB29_ALLOW_HOST_FALLBACK=true`.
+
+Security/robustness notes:
+- Query param (domain) always takes precedence over headers.
+- Normalization intentionally removes ports and lowercases for consistent policy lookup.
+- The Host fallback is feature-gated to avoid misclassification in consolidated-host topologies.
 
 ### Sample Policy Rows (Sheets CSV)
 Header:

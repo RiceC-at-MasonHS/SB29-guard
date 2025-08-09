@@ -56,6 +56,10 @@ Resolve-DnsName exampletool.com
 ```
 Expect A record with redirect IP.
 
+Header inference notes:
+- With per-domain A records, enable `SB29_ALLOW_HOST_FALLBACK=true` to let the app use the `Host` header when query params are absent.
+- If you consolidate to a blocked CNAME, keep Host fallback disabled and use a proxy to set `X-Original-Host` or `X-Forwarded-Host`.
+
 ### Verification checklist
 - DNS returns redirect record:
   - `Resolve-DnsName exampletool.com -Server <dns-ip>` shows `A 10.10.10.50` or CNAME chain to blocked host

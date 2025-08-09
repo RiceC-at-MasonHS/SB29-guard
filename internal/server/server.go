@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -58,13 +59,14 @@ code{background:var(--panel);padding:2px 6px;border-radius:6px;font-size:.875em}
 
 // Server hosts HTTP endpoints rendering policy-based explanations.
 type Server struct {
-	addr      string
-	policy    *policy.Policy
-	tmpl      *template.Template
-	inlineCSS template.CSS
-	ohioASCII string
-	lawURL    string
-	mu        sync.RWMutex
+	addr              string
+	policy            *policy.Policy
+	tmpl              *template.Template
+	inlineCSS         template.CSS
+	ohioASCII         string
+	lawURL            string
+	allowHostFallback bool
+	mu                sync.RWMutex
 
 	// refresh/metrics fields
 	refreshMu         sync.RWMutex
@@ -92,7 +94,9 @@ func New(addr string, p *policy.Policy) *Server {
 	if strings.TrimSpace(law) == "" {
 		law = "https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/"
 	}
-	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: template.CSS(defaultCSS), ohioASCII: ascii, lawURL: law}
+	// Feature flag: allow Host header as last-resort fallback (default: false)
+	allowHost := strings.EqualFold(strings.TrimSpace(os.Getenv("SB29_ALLOW_HOST_FALLBACK")), "true")
+	return &Server{addr: addr, policy: p, tmpl: tmpl, inlineCSS: template.CSS(defaultCSS), ohioASCII: ascii, lawURL: law, allowHostFallback: allowHost}
 }
 
 // NewWithTemplates creates a new Server using caller-supplied templates and CSS.
@@ -162,16 +166,33 @@ func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	orig := firstNonEmpty(q.Get("original_domain"), q.Get("original"), q.Get("domain"), q.Get("url"))
 	if orig == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = fmt.Fprint(w, "<p>Missing required parameter ?original_domain= (or original/domain/url)</p>")
-		return
+		// No query param provided—attempt to infer from headers (DNS redirect scenario)
+		orig = extractOriginalDomainFromHeaders(r, s.allowHostFallback)
+		if orig == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = fmt.Fprint(w, "<p>Missing original domain (provide ?domain= or ensure X-Original-Host or X-Forwarded-Host headers are set)</p>")
+			return
+		}
 	}
 	if strings.Contains(orig, "://") { // full URL passed
 		if u, err := url.Parse(orig); err == nil && u.Host != "" {
 			orig = u.Host
 		}
 	}
+	// Normalize: trim port (including bracketed IPv6), www., lowercase
 	orig = strings.ToLower(strings.TrimSpace(orig))
+	// Attempt robust host:port splitting
+	if strings.Contains(orig, ":") {
+		if strings.HasPrefix(orig, "[") {
+			if h, _, err := net.SplitHostPort(orig); err == nil {
+				orig = strings.Trim(h, "[]")
+			}
+		} else {
+			if h, _, err := net.SplitHostPort(orig); err == nil {
+				orig = h
+			}
+		}
+	}
 	lookupDomain := strings.TrimPrefix(orig, "www.")
 	p := s.getPolicy()
 	rec, ok := p.Lookup(lookupDomain)
@@ -281,3 +302,37 @@ func htmlEscape(s string) string {
 }
 
 // baseCSS is embedded from templates/style.css
+
+// extractOriginalDomainFromHeaders attempts to infer the original requested domain
+// from common headers that survive DNS redirects or reverse proxies.
+// Precedence (first match wins):
+// - X-Original-Host
+// - X-Forwarded-Host (first value)
+// - Referer (host portion)
+// - Host (last resort; may be the redirect host)
+func extractOriginalDomainFromHeaders(r *http.Request, allowHostFallback bool) string {
+	// X-Original-Host: non-standard but commonly set by proxies
+	if v := strings.TrimSpace(r.Header.Get("X-Original-Host")); v != "" {
+		return v
+	}
+	// X-Forwarded-Host: may be a comma-separated list; use first
+	if v := strings.TrimSpace(r.Header.Get("X-Forwarded-Host")); v != "" {
+		parts := strings.Split(v, ",")
+		if len(parts) > 0 {
+			return strings.TrimSpace(parts[0])
+		}
+		return v
+	}
+	// Referer: parse and use host
+	if ref := strings.TrimSpace(r.Header.Get("Referer")); ref != "" {
+		if u, err := url.Parse(ref); err == nil {
+			if u.Host != "" {
+				return u.Host
+			}
+		}
+	}
+	if allowHostFallback && r.Host != "" {
+		return r.Host
+	}
+	return ""
+}

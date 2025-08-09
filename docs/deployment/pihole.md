@@ -51,6 +51,10 @@ dig exampletool.com @<pihole-ip>
 ```
 Navigate to blocked domain in browser; expect redirect explanation page.
 
+Header inference notes:
+- Hosts mode (A/AAAA overrides) preserves the original domain in the HTTP Host header. Set `SB29_ALLOW_HOST_FALLBACK=true` if no proxy adds `X-Original-Host`/`X-Forwarded-Host`.
+- If you front the app with a reverse proxy, prefer injecting `X-Original-Host`.
+
 ### Verification checklist
 - DNS returns redirect record:
   - `dig exampletool.com @<pihole-ip>` shows `A 10.10.10.50`
