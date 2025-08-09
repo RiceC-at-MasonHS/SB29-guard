@@ -1,3 +1,5 @@
+// Command sb29guard provides CLI subcommands to validate policies, compute hashes,
+// generate DNS outputs, and serve the explanation web server.
 package main
 
 import (
@@ -15,7 +17,7 @@ import (
 	"github.com/RiceC-at-MasonHS/SB29-guard/internal/sheets"
 )
 
-var version = "0.0.0-dev"
+// version is injected via -ldflags at release time (optional).
 
 func main() {
 	if len(os.Args) < 2 {
@@ -151,17 +153,16 @@ func cmdServe(args []string) {
 			os.Exit(1)
 		}
 		return
-	} else {
-		data, rerr := os.ReadFile(*policyPath)
-		if rerr != nil {
-			fmt.Fprintf(os.Stderr, "error reading policy: %v\n", rerr)
-			os.Exit(2)
-		}
-		p, err = policy.Load(data)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "invalid policy: %v\n", err)
-			os.Exit(1)
-		}
+	}
+	data, rerr := os.ReadFile(*policyPath)
+	if rerr != nil {
+		fmt.Fprintf(os.Stderr, "error reading policy: %v\n", rerr)
+		os.Exit(2)
+	}
+	p, err = policy.Load(data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid policy: %v\n", err)
+		os.Exit(1)
 	}
 	var srv *server.Server
 	if *templatesDir != "" {
@@ -206,14 +207,14 @@ func scheduleCSVRefresh(srv *server.Server, csvURL, at string, every time.Durati
 		}
 	} else {
 		// Parse HH:MM
-		hour, min := 23, 59
+	hour, minute := 23, 59
 		if len(at) >= 4 {
 			if t, err := time.Parse("15:04", at); err == nil {
-				hour, min = t.Hour(), t.Minute()
+		hour, minute = t.Hour(), t.Minute()
 			}
 		}
 		for {
-			next := nextDailyTime(hour, min)
+	    next := nextDailyTime(hour, minute)
 			fmt.Printf("{\"event\":\"policy.refresh.scheduled\",\"next\":%q}\n", next.Format(time.RFC3339))
 			time.Sleep(time.Until(next))
 			doRefresh()
@@ -221,10 +222,10 @@ func scheduleCSVRefresh(srv *server.Server, csvURL, at string, every time.Durati
 	}
 }
 
-func nextDailyTime(hour, min int) time.Time {
+func nextDailyTime(hour, minute int) time.Time {
 	now := time.Now()
 	loc := now.Location()
-	candidate := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, loc)
+	candidate := time.Date(now.Year(), now.Month(), now.Day(), hour, minute, 0, 0, loc)
 	if now.Before(candidate) {
 		return candidate
 	}

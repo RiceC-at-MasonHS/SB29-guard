@@ -29,12 +29,12 @@ type Server struct {
 	mu        sync.RWMutex
 
 	// refresh/metrics fields
-	refreshMu          sync.RWMutex
-	lastRefreshTime    time.Time
-	lastRefreshSource  string
-	refreshCount       int
-	refreshErrorCount  int
-	lastRefreshError   string
+	refreshMu         sync.RWMutex
+	lastRefreshTime   time.Time
+	lastRefreshSource string
+	refreshCount      int
+	refreshErrorCount int
+	lastRefreshError  string
 }
 
 // New creates a new Server bound to addr using the supplied policy.
