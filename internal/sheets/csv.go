@@ -1,3 +1,5 @@
+// Package sheets provides helpers to load a policy from a published Google Sheets CSV,
+// with optional on-disk caching and simple retry/backoff logic.
 package sheets
 
 import (
@@ -36,7 +38,9 @@ func FetchCSVPolicy(url string, client *http.Client) (*policy.Policy, error) {
 		}
 		var pOut *policy.Policy
 		func() {
-			defer resp.Body.Close()
+			defer func() {
+				_ = resp.Body.Close()
+			}()
 			if resp.StatusCode != http.StatusOK {
 				lastErr = fmt.Errorf("unexpected status %d", resp.StatusCode)
 				return
@@ -122,7 +126,7 @@ func FetchCSVPolicyCached(url, cacheDir string, client *http.Client) (*policy.Po
 	if err != nil {
 		return nil, false, fmt.Errorf("download csv: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return nil, false, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
