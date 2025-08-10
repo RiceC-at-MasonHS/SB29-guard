@@ -1,6 +1,0 @@
-version: "3.9"
-services:
-	# Placeholder. Use the compose file at project-root easy-mode/docker-compose.yml
-	# See: ../../../../easy-mode/docker-compose.yml
-	placeholder:
-		image: scratch
