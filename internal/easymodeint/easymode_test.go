@@ -1,7 +1,7 @@
 //go:build easymode && integration
 // +build easymode,integration
 
-package internal
+package easymodeint
 
 import (
 	"net/http"
@@ -16,7 +16,7 @@ import (
 // It is opt-in: run with build tags and an env var to avoid CI usage by default.
 // Example:
 //
-//	go test -tags "easymode integration" -run TestEasyMode_Stack
+//	go test -tags "easymode integration" -run TestEasyMode_Stack ./internal/easymodeint
 func TestEasyMode_Stack(t *testing.T) {
 	if os.Getenv("SB29_EASYMODE_TEST") != "1" {
 		t.Skip("set SB29_EASYMODE_TEST=1 and build tags 'easymode integration' to run")

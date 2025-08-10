@@ -1,7 +1,7 @@
 //go:build easymode && integration && windows
 // +build easymode,integration,windows
 
-package internal
+package easymodeint
 
 import (
 	"os"
