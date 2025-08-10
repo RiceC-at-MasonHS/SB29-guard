@@ -10,6 +10,8 @@ ARG DATE
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.version=${VERSION}' -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.commit=${COMMIT}' -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.date=${DATE}'" -o /out/sb29guard ./cmd/sb29guard
 
 # Minimal runtime with CA certs
+# Runtime: distroless base. Optionally pin by digest for reproducibility and to appease scanners:
+# FROM gcr.io/distroless/base-debian12@sha256:<digest>
 FROM gcr.io/distroless/base-debian12:nonroot
 WORKDIR /app
 COPY --from=build /out/sb29guard /app/sb29guard

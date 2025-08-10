@@ -1,6 +1,7 @@
 # CLI Design Specification
 
 Status: Draft
+Note: This spec includes ideas beyond the current release. For authoritative flags and formats, use `sb29guard --help` and `sb29guard generate-dns --help`.
 
 Binary Name: `sb29guard`
 
@@ -8,7 +9,7 @@ Binary Name: `sb29guard`
 ```
 sb29guard
   validate       Validate policy (YAML or published CSV)
-  generate-dns   Produce DNS artifacts (hosts/bind/unbound/rpz)
+  generate-dns   Produce DNS artifacts (hosts/bind/unbound/rpz/dnsmasq/domain-list/winps)
   serve          Start redirect web service
   hash           Output normalized policy hash & version metadata
 ```

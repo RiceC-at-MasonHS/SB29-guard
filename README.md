@@ -36,6 +36,16 @@ District‑friendly tool that shows a clear, plain‑language “Why was I redir
 - Releases (binaries + SHA256SUMS): GitHub → Releases
 - Container image (GHCR): `ghcr.io/ricec-at-masonhs/sb29-guard:v1.x.x` (pin a version or digest; latest stable is v1.1.x)
 
+## Try it locally
+- Using the binary:
+  - `sb29guard version`
+  - `sb29guard validate --policy policy/domains.example.yaml`
+  - `sb29guard serve --policy policy/domains.example.yaml`
+- From source (no install):
+  - `go run ./cmd/sb29guard version`
+  - `go run ./cmd/sb29guard validate --policy policy/domains.example.yaml`
+  - `go run ./cmd/sb29guard serve --policy policy/domains.example.yaml`
+
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`
 - Deployment guides (platform specifics): `docs/deployment/`
