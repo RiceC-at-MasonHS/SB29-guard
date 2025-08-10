@@ -34,7 +34,7 @@ District‑friendly tool that shows a clear, plain‑language “Why was I redir
 
 ## Downloads and images
 - Releases (binaries + SHA256SUMS): GitHub → Releases
-- Container image (GHCR): `ghcr.io/ricec-at-masonhs/sb29-guard:v1.x.x` (prefer pinning a version or digest)
+- Container image (GHCR): `ghcr.io/ricec-at-masonhs/sb29-guard:v1.x.x` (pin a version or digest; latest stable is v1.1.x)
 
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`

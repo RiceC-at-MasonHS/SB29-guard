@@ -41,8 +41,8 @@ Output (json format):
 ## generate-dns
 Flags:
 - `--out <file|dir>` (required)
-- `--mode a-record|cname|rpz` (default a-record)
-- `--format zone|hosts|unbound|rpz|winps|domain-list` (subset depends on mode)
+- `--mode a-record|cname` (default a-record)
+- `--format hosts|bind|unbound|rpz|dnsmasq|domain-list|winps` (subset depends on mode)
 - `--redirect-ipv4 <ip>` (required for a-record/hosts)
 - `--redirect-ipv6 <ip>` (optional)
 - `--redirect-host <fqdn>` (required for cname/rpz)
@@ -56,6 +56,7 @@ Additional Flags (new):
 - `--manifest-out <path>` Override default manifest path (`dist/dns/manifest.json`).
 
 Supported Formats (expanded):
+Note: The following list includes exploratory targets; for the authoritative, implemented set in v1.x, see `sb29guard generate-dns --help`.
 - `pfSense-unbound`
 - `opnsense-unbound`
 - `infoblox-rpz`

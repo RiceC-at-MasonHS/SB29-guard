@@ -25,7 +25,7 @@ ACME_EMAIL=it-admin@school.org
 # Optional: override default law URL
 # SB29_LAW_URL=https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/
 # Optional: use a published image instead of building locally (recommended)
-# SB29_IMAGE=ghcr.io/ricec-at-masonhs/sb29-guard:v1.0.0
+# SB29_IMAGE=ghcr.io/ricec-at-masonhs/sb29-guard:v1.x.x
 ```
 3) Launch:
 ```
