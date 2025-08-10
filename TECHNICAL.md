@@ -83,6 +83,14 @@ SB29_ALLOW_HOST_FALLBACK=false
 ```
 File mode typically only needs the fallback policy path.
 
+Law link customization (in effect now): set `SB29_LAW_URL` to change the `/law` redirect target (default points to the LIS PDF for Ohio SB29). Example:
+
+PowerShell (Windows):
+```
+$env:SB29_LAW_URL = "https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/"
+```
+Restart the server after changing the variable.
+
 ### Header-based domain inference
 When DNS redirects a blocked site to the SB29-guard server, there’s often no query param available. The server infers the original domain from HTTP headers with strict precedence and normalization rules.
 
@@ -111,6 +119,17 @@ Security/robustness notes:
 - Query param (domain) always takes precedence over headers.
 - Normalization intentionally removes ports and lowercases for consistent policy lookup.
 - The Host fallback is feature-gated to avoid misclassification in consolidated-host topologies.
+
+### Verification checklist (Ops)
+- DNS returns redirect for a sample domain (platform-specific):
+  - BIND/Unbound: `dig exampletool.com @<resolver-ip>`
+  - Pi-hole: `dig exampletool.com @<pihole-ip>`
+  - Windows DNS: `Resolve-DnsName exampletool.com -Server <dns-ip>`
+- Web server health: GET `http://<redirect-host>:8080/health` → `{ "status": "ok" }`
+- Metrics: GET `http://<redirect-host>:8080/metrics` → includes `policy_version`, `record_count`, refresh stats
+- Browser: Visit a blocked domain and confirm the explanation page renders
+
+See platform guides for detailed steps: `docs/deployment/` (BIND, Unbound, Pi-hole, Windows DNS, pfSense, OPNsense, Infoblox). Easy-mode (Caddy + Compose) is in `easy-mode/`.
 
 ### Sample Policy Rows (Sheets CSV)
 Header:
@@ -141,6 +160,11 @@ Local pre-commit mirrors these gates (targeted to changed packages for speed).
 
 ### Hashing & Integrity
 Canonical hash: SHA-256 over normalized ACTIVE records only (suspended excluded). Fields: domain, classification, rationale, last_review, status (normalized + newline joined). Exposed via CLI `hash` command for audit trails. Planned: signed manifest for attestation.
+
+Release artifacts verification:
+1) Download the appropriate `sb29guard-<os>-<arch>` and `SHA256SUMS.txt` from GitHub Releases.
+2) Verify checksums using your platform tool, e.g. `shasum -a 256 sb29guard-darwin-arm64` or `sha256sum sb29guard-linux-amd64`.
+3) Confirm the hex digest matches the corresponding line in `SHA256SUMS.txt`.
 
 ### Aggregated Logs (Planned)
 Daily JSON structure (no PII):
