@@ -3,15 +3,13 @@
 /easy-mode/out/
 /easy-mode/policy/
 
-# Editor/OS
+# OS / editor
 .DS_Store
 Thumbs.db
-
-# Go build/test caches (optional local)
-/dist/# SB29-guard Generated / Build Artifacts
+.idea/
+.vscode/
 
 # Build outputs / compiled binaries
-/.gitignore
 /bin/
 /dist/
 /sb29guard
@@ -43,12 +41,6 @@ policy/domains.generated.yaml
 .env.*
 !.env.example
 secrets/
-
-# OS / editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
 
 # Test coverage / tooling
 coverage.out

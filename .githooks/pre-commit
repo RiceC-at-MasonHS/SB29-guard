@@ -47,6 +47,15 @@ fi
 
 go build ./...
 
+# Block committing Windows binaries (.exe) just in case .gitignore was bypassed
+blocked=$(git diff --cached --name-only --diff-filter=AM | grep -Ei '\\.exe$' || true)
+if [ -n "$blocked" ]; then
+  echo "[pre-commit] Blocked: refusing to commit Windows binaries (.exe). Files:" >&2
+  echo "$blocked" >&2
+  echo "If this is intentional, consider using Releases or artifacts instead of committing binaries." >&2
+  exit 1
+fi
+
 # Unit tests with race + overall coverage (mirrors CI)
 ############################
 # Determine changed files and packages

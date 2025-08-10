@@ -51,7 +51,7 @@ func main() {
 func usage() {
 	fmt.Println("sb29guard <command> [flags]")
 	fmt.Println("commands: validate, hash, serve, generate-dns, version")
-	fmt.Println("generate-dns formats: hosts|bind|unbound|rpz")
+	fmt.Println("generate-dns formats: hosts|bind|unbound|rpz|dnsmasq|domain-list|winps")
 }
 
 func cmdVersion() {
