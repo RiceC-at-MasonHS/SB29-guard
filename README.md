@@ -153,6 +153,14 @@ Container image (GHCR):
 	- Example (Compose): `image: ghcr.io/ricec-at-masonhs/sb29-guard:v1.0.0`
 	- Optional strict pin: `image: ghcr.io/ricec-at-masonhs/sb29-guard@sha256:<digest>`
 
+	Binary downloads verification:
+
+	1) Download the appropriate sb29guard-<os>-<arch> file and SHA256SUMS.txt from the Release page.
+	2) Verify checksums:
+		- Windows (PowerShell): `Get-FileHash .\sb29guard-windows-amd64.exe -Algorithm SHA256`
+		- macOS/Linux: `shasum -a 256 sb29guard-darwin-arm64` or `sha256sum sb29guard-linux-amd64`
+	3) Confirm the hex matches the corresponding line in SHA256SUMS.txt.
+
 ### Building From Source (Developers) 🛠️
 Need to hack? Install Go 1.22+ then:
 ```
