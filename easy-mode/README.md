@@ -25,12 +25,13 @@ ACME_EMAIL=it-admin@school.org
 # Optional: override default law URL
 # SB29_LAW_URL=https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/
 # Optional: use a published image instead of building locally (recommended)
-# SB29_IMAGE=ghcr.io/ricec-at-masonhs/sb29-guard:latest
+# SB29_IMAGE=ghcr.io/ricec-at-masonhs/sb29-guard:v1.0.0
 ```
 3) Launch:
 ```
 docker compose -f easy-mode/docker-compose.yml up -d
 ```
+Note: To use the published image, set SB29_IMAGE in `.env` and comment out the `build:` block in `easy-mode/docker-compose.yml`.
 4) Test in a browser: https://blocked.guard.school.org/explain?domain=exampletool.com
 
 Optional: Quick header-based CLI tests (local port published for this)

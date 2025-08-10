@@ -10,7 +10,7 @@ Making blocked ed‑tech domains less confusing (and more transparent) for teach
 [![Build](https://github.com/RiceC-at-MasonHS/SB29-guard/actions/workflows/ci.yml/badge.svg)](../../actions)
 ![Go Version](https://img.shields.io/badge/go-1.22+-00ADD8?logo=go)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
-![Status](https://img.shields.io/badge/status-early%20preview-orange)
+![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-core%2080%25+-brightgreen)
 
 </div>
@@ -145,6 +145,13 @@ Record that hash if you need an audit trail.
 
 ## Releases 📦
 Pre-built binaries (see Releases). Download, place on a server (or container), run commands above.
+
+Container image (GHCR):
+
+- ghcr.io/ricec-at-masonhs/sb29-guard:v1.0.0
+- Prefer pinning a version tag (or digest) over latest for stability.
+	- Example (Compose): `image: ghcr.io/ricec-at-masonhs/sb29-guard:v1.0.0`
+	- Optional strict pin: `image: ghcr.io/ricec-at-masonhs/sb29-guard@sha256:<digest>`
 
 ### Building From Source (Developers) 🛠️
 Need to hack? Install Go 1.22+ then:
