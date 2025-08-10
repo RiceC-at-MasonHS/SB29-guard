@@ -1,4 +1,14 @@
-# SB29-guard Generated / Build Artifacts
+# Easy-mode local state
+/easy-mode/.env
+/easy-mode/out/
+/easy-mode/policy/
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+
+# Go build/test caches (optional local)
+/dist/# SB29-guard Generated / Build Artifacts
 
 # Build outputs / compiled binaries
 /.gitignore

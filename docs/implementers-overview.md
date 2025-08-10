@@ -3,7 +3,7 @@
 This document summarizes deployment options and points to detailed guides.
 
 Recommended path:
-- Easy‑mode (auto‑HTTPS): docs/implementers/easy-mode/
+- Easy‑mode (auto‑HTTPS): easy-mode/
 
 Other options:
 - VM/Bare-metal: docs/implementers/vm.md

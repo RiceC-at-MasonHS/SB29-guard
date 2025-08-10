@@ -1,0 +1,48 @@
+name: Easy-mode Integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Runner OS"
+        required: true
+        default: windows-latest
+        type: choice
+        options: [windows-latest, ubuntu-latest]
+
+jobs:
+  test:
+    runs-on: ${{ github.event.inputs.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          cache: true
+
+      - name: Install Docker Compose (Linux only)
+        if: ${{ startsWith(runner.os, 'Linux') }}
+        run: |
+          docker compose version || true
+
+      - name: Docker info
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Run PowerShell integration tests (Windows)
+        if: ${{ startsWith(runner.os, 'Windows') }}
+        env:
+          SB29_EASYMODE_TEST: '1'
+        run: |
+          go test -tags "easymode integration windows" ./internal -run DNSGen_PowerShell -v
+
+      - name: Run Bash integration tests (Linux)
+        if: ${{ startsWith(runner.os, 'Linux') }}
+        env:
+          SB29_EASYMODE_TEST: '1'
+        run: |
+          go test -tags "easymode integration" ./internal -run DNSGen_Bash -v

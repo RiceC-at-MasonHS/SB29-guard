@@ -156,13 +156,45 @@ No Makefile. CI mirrors these steps. Core logic (policy, DNS generation) has cov
 
 ## License
 SB29-guard is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-- You can use and modify it freely.
-- If you modify and run it as a network service, you must provide the corresponding source to users of the service.
-- You may charge for installation, support, or hosting; the source must remain available under AGPL-3.0.
-- See `LICENSE` for the full terms.
+
+### Try it: Easy‑mode (HTTPS, one command)
+If you have Docker Desktop, you can spin up the auto‑HTTPS stack:
+
+```powershell
+# 1) Prepare policy
+New-Item -ItemType Directory -Force -Path easy-mode\policy | Out-Null
+Copy-Item -Force policy\domains.example.yaml easy-mode\policy\domains.yaml
+
+# 2) Create easy-mode/.env with your public domain and email
+#    (Domain must resolve publicly to this host for HTTPS issuance.)
+@'
+SB29_DOMAIN=blocked.guard.school.org
+ACME_EMAIL=it-admin@school.org
+# Optional: override default law URL
+# SB29_LAW_URL=https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/
+'@ | Set-Content -NoNewline -Path easy-mode\.env
+
+# 3) Launch the stack
+docker compose -f easy-mode\docker-compose.yml up -d
+
+# 4) Test in a browser (replace with your domain):
+#    https://blocked.guard.school.org/explain?domain=exampletool.com
+
+# Optional: Quick header-based CLI tests (local port published for this)
+# Expect 200 for a domain in the example policy (exampletool.com)
+curl.exe -s -H "X-Original-Host: exampletool.com" -o NUL -w "HTTP %{http_code}\n" http://localhost:8080/explain
+
+# Expect 404 for a domain not in policy
+curl.exe -s -H "X-Original-Host: not-in-policy.example" -o NUL -w "HTTP %{http_code}\n" http://localhost:8080/explain
+
+# 5) Tear down when finished
+# docker compose -f easy-mode\docker-compose.yml down
+```
 
 ## Disclaimer ⚖️
-Helps with transparency & workflow. Does NOT replace district legal review. Always verify with your data privacy / legal team.
+You can use and modify this software freely. If you modify and run it as a network service, you must provide the corresponding source to users of the service. You may charge for installation, support, or hosting; the source must remain available under AGPL‑3.0. See `LICENSE` for the full terms.
+
+Helps with transparency & workflow. Does NOT replace district legal review. It just makes it a little harder for someone to accidentally use a disallowed web-service. Always verify with your data privacy / legal team.
 
 ---
 Questions or ideas? Open an issue. Contributions welcome.
