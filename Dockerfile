@@ -4,7 +4,10 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w" -o /out/sb29guard ./cmd/sb29guard
+ARG VERSION=dev
+ARG COMMIT=dirty
+ARG DATE
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.version=${VERSION}' -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.commit=${COMMIT}' -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.date=${DATE}'" -o /out/sb29guard ./cmd/sb29guard
 
 # Minimal runtime with CA certs
 FROM gcr.io/distroless/base-debian12:nonroot

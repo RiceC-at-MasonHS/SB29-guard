@@ -27,7 +27,10 @@ jobs:
           SUF=""
           if [ "${{ matrix.goos }}" = "windows" ]; then SUF=.exe; fi
           OUT=${NAME}-${{ matrix.goos }}-${{ matrix.goarch }}$SUF
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -trimpath -ldflags "-s -w" -o "$OUT" ./cmd/sb29guard
+          VER=${GITHUB_REF_NAME}
+          COM=${GITHUB_SHA}
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -trimpath -ldflags "-s -w -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.version=$VER' -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.commit=$COM' -X 'github.com/RiceC-at-MasonHS/SB29-guard/cmd/sb29guard.date=$DATE'" -o "$OUT" ./cmd/sb29guard
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

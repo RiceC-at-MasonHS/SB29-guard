@@ -167,6 +167,7 @@ Need to hack? Install Go 1.22+ then:
 go test ./...
 go build -trimpath -ldflags "-s -w" ./cmd/sb29guard
 ./sb29guard --help
+./sb29guard version  # prints version/commit/date when built from release workflows or Docker
 ```
 No Makefile. CI mirrors these steps. Core logic (policy, DNS generation) has coverage gates; CLI & server also tested.
 

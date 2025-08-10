@@ -17,7 +17,12 @@ import (
 	"github.com/RiceC-at-MasonHS/SB29-guard/internal/sheets"
 )
 
-// version is injected via -ldflags at release time (optional).
+// version info is injected via -ldflags at release time.
+var (
+	version = "dev"
+	commit  = ""
+	date    = ""
+)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -34,6 +39,8 @@ func main() {
 		cmdServe(os.Args[2:])
 	case "generate-dns":
 		cmdGenerateDNS(os.Args[2:])
+	case "version":
+		cmdVersion()
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", sub)
 		usage()
@@ -43,8 +50,34 @@ func main() {
 
 func usage() {
 	fmt.Println("sb29guard <command> [flags]")
-	fmt.Println("commands: validate, hash, serve, generate-dns")
+	fmt.Println("commands: validate, hash, serve, generate-dns, version")
 	fmt.Println("generate-dns formats: hosts|bind|unbound|rpz")
+}
+
+func cmdVersion() {
+	// Print a compact one-line and JSON for machine-readability
+	v := version
+	if v == "" {
+		v = "dev"
+	}
+	fmt.Printf("sb29guard %s", v)
+	if commit != "" {
+		fmt.Printf(" (%s)", commit[:minInt(7, len(commit))])
+	}
+	if date != "" {
+		fmt.Printf(" %s", date)
+	}
+	fmt.Println()
+	// JSON line
+	fmt.Printf("{\"version\":%q,\"commit\":%q,\"date\":%q}\n", v, commit, date)
+}
+
+// minInt returns the smaller of two ints (named to avoid builtin-name linters)
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func cmdValidate(args []string) {
