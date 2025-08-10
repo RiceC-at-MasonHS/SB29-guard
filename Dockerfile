@@ -1,4 +1,6 @@
 # Multi-stage build for sb29guard
+# ---> that means vulnerabilities for this top container aren't a big deal
+# ---> ...it only runs for a few seconds
 FROM golang:1.22-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
