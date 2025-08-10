@@ -15,6 +15,10 @@ Making blocked ed‑tech domains less confusing (and more transparent) for teach
 
 </div>
 
+<div align="center">
+	<img src="./screenshot-2025-08-09-204319.png" alt="SB29-guard explanation page (dark mode)" style="max-width: 980px; width: 100%; border-radius: 8px;" />
+</div>
+
 District‑friendly tool that shows a clear, plain‑language “Why was I redirected?” page when staff or students try a site without an approved Data Privacy Agreement (SB29 context). One small self‑contained binary (HTML & CSS embedded). No tracking. No student data stored. ✨
 
 If you just need to get it running, follow the Quick Start below. For deeper technical details, see the Technical Reference: TECHNICAL.md.
@@ -126,6 +130,9 @@ See platform guides with detailed checklists:
 - Unbound: docs/deployment/unbound.md
 - Pi-hole: docs/deployment/pihole.md
 - Windows DNS: docs/deployment/windows-dns.md
+ - pfSense: docs/deployment/pfSense.md
+ - OPNsense: docs/deployment/OPNsense.md
+ - Infoblox: docs/deployment/infoblox.md
  - Implementers (VM/Containers/HTTPS): docs/implementers/
  - Easy‑mode (recommended, auto‑HTTPS): easy-mode/ (Caddy + Docker Compose)
 
