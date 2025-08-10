@@ -1,5 +1,8 @@
 {$SB29_DOMAIN} {
-  encode gzip
+  # Enable modern compression; zstd when client supports it
+  encode gzip zstd
+  # Optional: HSTS hardening (uncomment after confirming HTTPS stability)
+  # header Strict-Transport-Security "max-age=15552000; includeSubDomains"
   # Proxy to app
   reverse_proxy sb29guard:8080 {
     header_up X-Original-Host {host}

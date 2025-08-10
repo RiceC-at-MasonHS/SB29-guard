@@ -7,5 +7,6 @@ Contents:
 - container.md – Container deployment (Docker/Podman/Kubernetes)
 - https.md – HTTPS/TLS: reverse proxy, certs, automated renewal
  - easy-mode – Recommended one-command HTTPS deployment (Caddy + Compose) at project root
+ - See also detailed DNS platform guides under docs/deployment/ (BIND, Unbound, Pi-hole, pfSense, OPNsense, Infoblox)
 
 These guides complement the DNS platform docs under docs/deployment/.

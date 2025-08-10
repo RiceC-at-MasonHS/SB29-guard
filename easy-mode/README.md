@@ -24,6 +24,8 @@ SB29_DOMAIN=blocked.guard.school.org
 ACME_EMAIL=it-admin@school.org
 # Optional: override default law URL
 # SB29_LAW_URL=https://search-prod.lis.state.oh.us/api/v2/general_assembly_135/legislation/sb29/05_EN/pdf/
+# Optional: use a published image instead of building locally (recommended)
+# SB29_IMAGE=ghcr.io/ricec-at-masonhs/sb29-guard:latest
 ```
 3) Launch:
 ```
@@ -71,3 +73,25 @@ Outputs land in `easy-mode/out/` on your host.
 ```
 docker compose -f easy-mode/docker-compose.yml down
 ```
+
+## Alternate ports (when 80/443 are busy)
+If ports 80/443 are in use (or you’re testing behind another proxy), publish Caddy on 8081/8443 using the override file:
+```
+docker compose -f easy-mode/docker-compose.yml -f easy-mode/docker-compose.override-ports.yml up -d
+```
+You’ll then access the site at https://blocked.guard.school.org:8443/
+
+## Hardening notes
+- Enforce HSTS (HTTP Strict Transport Security). Caddy enables HSTS by default for HTTPS with a conservative max-age. To increase (e.g., 6 months):
+	- Add to your Caddyfile site block:
+		- `header Strict-Transport-Security "max-age=15552000; includeSubDomains"`
+	- Only enable long HSTS once you’re confident HTTPS is stable to avoid lock-in issues.
+- TLS and OCSP: Caddy handles modern TLS defaults and OCSP stapling automatically.
+- Caddy tuning:
+	- Use `encode gzip zstd` to enable zstd when clients support it.
+	- Set `auto_https` defaults; Caddy already redirects HTTP->HTTPS. Keep port 80 reachable for ACME http-01.
+- App security:
+	- Host fallback remains off by default; only enable `SB29_ALLOW_HOST_FALLBACK=true` when you intentionally rely on DNS A/AAAA overrides without a proxy.
+	- CSP in the app is locked down; custom CSS is inline and safe. Avoid adding external scripts.
+
+For advanced deployments behind existing load balancers or WAFs, see the implementers guides in `docs/implementers/`.

@@ -8,7 +8,7 @@ Deploy with Docker/Podman or into Kubernetes.
 version: '3.9'
 services:
   sb29guard:
-    image: ghcr.io/your-org/sb29-guard:latest # or build locally
+  image: ghcr.io/ricec-at-masonhs/sb29-guard:latest # or build locally (or set SB29_IMAGE)
     container_name: sb29guard
     ports:
       - "8080:8080"
@@ -48,6 +48,7 @@ spec:
       containers:
         - name: sb29guard
           image: ghcr.io/your-org/sb29-guard:latest
+          # Tip: Use the published image from GHCR (see easy-mode .env SB29_IMAGE)
           args: ["serve","--policy","/policy/domains.yaml"]
           ports: [{ containerPort: 8080 }]
           env:
