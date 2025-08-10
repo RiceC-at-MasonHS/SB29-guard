@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.1
+
+Maintenance release to fix release automation. No functional code changes from v1.1.0.
+
+Fixes:
+- Avoid artifact name collisions in release matrix builds (unique names + merge on download)
+- Concurrency guard for tag-triggered releases to prevent overlapping runs
+- Consolidate to a single tag-based release workflow; legacy release kept dispatch-only
+- CI artifacts set to overwrite on re-runs to prevent 409 conflicts
+
 ## v1.1.0
 
 Highlights:

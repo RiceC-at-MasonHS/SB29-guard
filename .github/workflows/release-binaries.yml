@@ -5,6 +5,10 @@ on:
     tags: [ 'v*.*.*' ]
   workflow_dispatch:
 
+concurrency:
+  group: release-binaries-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -34,8 +38,10 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries
+          name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
           path: sb29guard-*
+          if-no-files-found: error
+          overwrite: true
 
   checksums-and-release:
     needs: build
@@ -45,7 +51,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: binaries
+          pattern: binaries-*
+          merge-multiple: true
           path: dist
       - name: Generate SHA256SUMS
         run: |

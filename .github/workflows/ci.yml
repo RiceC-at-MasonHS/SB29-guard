@@ -122,6 +122,8 @@ jobs:
         with:
           name: coverage-split
           path: coverage/
+          if-no-files-found: error
+          overwrite: true
       - name: Coverage Summary
         run: go tool cover -func=coverage.out | tail -n 1
       - name: Upload Coverage Artifact
@@ -129,6 +131,8 @@ jobs:
         with:
           name: coverage
           path: coverage.out
+          if-no-files-found: error
+          overwrite: true
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
