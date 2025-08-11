@@ -60,6 +60,10 @@ Quick proxy sanity check (header‑injection):
 Local examples:
 - Generate example proxy bundles locally: `make examples` (writes to `dist/`, which is ignored by git)
 
+Automation scripts
+- Windows nightly fetch/import: `docs/implementers/scripts/windows-fetch-and-import.ps1`
+- Linux nightly fetch/reload: `docs/implementers/scripts/linux-fetch-and-reload.sh`
+
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`
 - Proxy/Gateway integration (school‑seamless, default recommendation): `docs/implementers/proxy.md`

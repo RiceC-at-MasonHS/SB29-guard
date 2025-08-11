@@ -2,8 +2,11 @@
 # SB29-guard – Linux nightly fetch and proxy reload
 # Purpose: After sb29-guard refreshes its Google Sheet (default ~23:59 local),
 #          fetch the latest domain list and import into your proxy, then reload.
-# Usage: Put in /usr/local/bin/sb29-fetch-and-reload.sh and chmod +x.
-#        Add a cron entry like: 10 0 * * * /usr/local/bin/sb29-fetch-and-reload.sh
+# How to schedule (cron)
+# 1) Save as /usr/local/bin/sb29-fetch-and-reload.sh and chmod +x /usr/local/bin/sb29-fetch-and-reload.sh
+# 2) Edit crontab: crontab -e
+# 3) Add line (10 minutes after nightly refresh):
+#    10 0 * * * /usr/local/bin/sb29-fetch-and-reload.sh
 
 set -euo pipefail
 GUARD_BASE="https://guard.school.internal"

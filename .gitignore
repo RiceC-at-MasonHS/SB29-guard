@@ -29,7 +29,9 @@ go.work.sum
 # DNS / manifest outputs
 dist/dns/
 **/manifest.json
+# Generally ignore PowerShell scripts, except curated docs scripts
 **/*.ps1
+!docs/implementers/scripts/*.ps1
 nginx-blocked.conf
 
 # Aggregated logs & runtime logs
