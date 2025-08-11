@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.2
+
+Maintenance: release automation polish. No functional code changes from v1.1.1.
+
+Fixes:
+- Prevent duplicate upload of SHA256SUMS.txt in release step (single glob; strict fail_on_unmatched_files)
+
 ## v1.1.1
 
 Maintenance release to fix release automation. No functional code changes from v1.1.0.
