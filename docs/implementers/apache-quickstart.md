@@ -1,42 +1,35 @@
 # Apache httpd quickstart (School Mode)
 
-Goal: show a friendly explain page for blocked sites using Apache.
+Goal: run SB29-guard behind Apache so blocked requests show a friendly explain page.
 
 Preview
 ![Explain page screenshot](../../screenshot-2025-08-09-204319.png)
 
-Models
-- Header-injection reverse proxy (preferred): ProxyPass to sb29-guard and set X-Original-Host/X-Forwarded-Host
-- Redirect to static explain: 302 to an explain site that reads d,c,v,h
+Note
+- Bundles aren’t committed to git; they’re generated into dist/ and may be overwritten.
 
 Prereqs
 - SB29-guard reachable (e.g., http://127.0.0.1:8080)
 - Vhost for blocked traffic, e.g., blocked.school.local
 - Enable modules: proxy, proxy_http, headers, ssl (if HTTPS)
 
-1) Generate config
-Try this first
-- Minimal guard.conf to validate header-injection:
-  sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > guard.conf
-  # Include and reload Apache.
-Snippet:
-  sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run
-Bundle:
-  sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --bundle-dir dist/apache
-Redirect variant:
-  sb29guard generate-proxy --format apache --mode redirect --site-host blocked.school.local --explain-url https://explain.school.example/explain --bundle-dir dist/apache-redirect
+Generate example bundle (one-liner)
+- sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --bundle-dir dist/apache
 
-2) Install
-- Place guard.conf in sites-available (or conf.d) and enable the site.
-- Reload Apache.
+Try this first (minimal guard.conf)
+- sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > guard.conf
+- Include and reload Apache.
 
-3) Verify
+Install and verify
+- Place guard.conf in sites-available (or conf.d) and enable the site; reload Apache.
 - curl -H "X-Original-Host: exampletool.com" http://blocked.school.local/explain
-- Expect the explain HTML; for non-listed domains, guard returns 404 Not Classified.
+- Expect explain HTML; non-listed domains return 404 Not Classified (pass-through).
 
 Notes
 - For HTTPS, configure SSLCertificateFile/SSLCertificateKeyFile on the vhost.
-- To host a static explain page, run generate-explain-static and serve the folder.
+- Static explain (redirect model): sb29guard generate-explain-static --out-dir dist/explain and host it.
 
-See example bundle
-- dist/apache/README.md
+See also
+- Example bundle: dist/apache/README.md
+- Proxy overview: docs/implementers/proxy.md
+- GUI/list integrations: docs/implementers/gui-proxy.md

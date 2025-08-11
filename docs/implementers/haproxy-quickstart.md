@@ -1,44 +1,36 @@
 # HAProxy quickstart (School Mode)
 
-Goal: route blocked traffic to an explanation flow using HAProxy.
+Goal: run SB29-guard with HAProxy so blocked requests show a friendly explain page.
 
 Preview
 ![Explain page screenshot](../../screenshot-2025-08-09-204319.png)
 
-Models
-- Header-injection reverse proxy (preferred): forward to sb29-guard with X-Original-Host
-- Redirect to static explain: 302 to an explain site that reads d,c,v,h
+Note
+- Bundles aren’t committed to git; they’re generated into dist/ and may be overwritten.
 
 Prereqs
-- SB29-guard reachable (e.g., 127.0.0.1:8080)
+- SB29-guard reachable (e.g., http://127.0.0.1:8080)
 - Vhost for blocked traffic, e.g., blocked.school.local
 
-1) Generate config
-Try this first
-- Minimal haproxy.cfg to validate header-injection quickly:
-  sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > haproxy.cfg
-  haproxy -f haproxy.cfg -db
-Snippet (header-injection):
-  sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run
-Bundle:
-  sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --bundle-dir dist/haproxy
-Redirect:
-  sb29guard generate-proxy --format haproxy --mode redirect --site-host blocked.school.local --explain-url https://explain.school.example/explain --bundle-dir dist/haproxy-redirect
+Generate example bundle (one-liner)
+- sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --bundle-dir dist/haproxy
 
-2) Install and reload
-- Copy haproxy.cfg to the system config location or include it from your main config.
-- Reload/Restart HAProxy.
+Try this first (minimal config)
+- sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > haproxy.cfg
+- haproxy -f haproxy.cfg -db
 
-3) Verify
+Install and verify
+- Copy haproxy.cfg to your system location or include it from main config; reload HAProxy.
 - curl -H "Host: blocked.school.local" -H "X-Original-Host: exampletool.com" http://127.0.0.1:80/explain
-- Expect 200 and an explain page; non-listed domains should pass-through.
+- Expect 200 and explain HTML; non-listed domains pass through (404 from guard).
 
 Selective routing map (optional)
-- If you supply --policy or --sheet-csv, a blocked.map file is generated.
-- Use -m dom or ACLs to match entries (includes base and .base for wildcards).
+- If you pass --policy or --sheet-csv, blocked.map is generated (includes base and .base for wildcards).
 
 Notes
-- Ensure required modules/ACLs are enabled; check logs if 404 occurs.
+- Ensure required ACLs; check logs if you see 404 unexpectedly.
 
-See example bundle
-- dist/haproxy/README.md
+See also
+- Example bundle: dist/haproxy/README.md
+- Proxy overview: docs/implementers/proxy.md
+- GUI/list integrations: docs/implementers/gui-proxy.md
