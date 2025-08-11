@@ -129,7 +129,7 @@ Security/robustness notes:
 - Metrics: GET `http://<redirect-host>:8080/metrics` → includes `policy_version`, `record_count`, refresh stats
 - Browser: Visit a blocked domain and confirm the explanation page renders
 
-See platform guides for detailed steps: `docs/deployment/` (BIND, Unbound, Pi-hole, Windows DNS, pfSense, OPNsense, Infoblox). Easy-mode (Caddy + Compose) is in `easy-mode/`.
+See platform guides for detailed steps: `docs/deployment/` (BIND, Unbound, Pi-hole, Windows DNS, pfSense, OPNsense, Infoblox). For seamless school deployments, see `docs/implementers/proxy.md`.
 
 ### Sample Policy Rows (Sheets CSV)
 Header:

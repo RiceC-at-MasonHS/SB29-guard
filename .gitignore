@@ -1,7 +1,4 @@
-# Easy-mode local state
-/easy-mode/.env
-/easy-mode/out/
-/easy-mode/policy/
+## (legacy) easy-mode was removed in v1.2.0; no ignores remain for it
 
 # OS / editor
 .DS_Store

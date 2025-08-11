@@ -3,7 +3,7 @@
 This document summarizes deployment options and points to detailed guides.
 
 Recommended path:
-- Easy‑mode (auto‑HTTPS): easy-mode/
+- Proxy/Gateway integration (School Mode): docs/implementers/proxy.md
 
 Other options:
 - VM/Bare-metal: docs/implementers/vm.md

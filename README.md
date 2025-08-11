@@ -27,7 +27,7 @@ District‑friendly tool that shows a clear, plain‑language “Why was I redir
 - Point DNS (A/CNAME/RPZ/hosts) to this service; the page infers the original domain safely.
 
 ## Get started
-- Easiest (recommended): Easy‑mode with auto‑HTTPS using Docker + Caddy — see `easy-mode/README.md`.
+- School Mode (recommended): Integrate with your proxy/gateway for seamless HTTPS redirects — see `docs/implementers/proxy.md`.
 - Prefer your own stack? See implementers overview and deployment guides:
   - `docs/implementers/README.md`
   - `docs/deployment/` (BIND, Unbound, Pi-hole, Windows DNS, pfSense, OPNsense, Infoblox)
@@ -48,6 +48,7 @@ District‑friendly tool that shows a clear, plain‑language “Why was I redir
 
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`
+- Proxy/Gateway integration (school‑seamless, default recommendation): `docs/implementers/proxy.md`
 - Deployment guides (platform specifics): `docs/deployment/`
 - Customizing the UI/templates: `CUSTOMIZING.md`
 
