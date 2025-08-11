@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Status: Draft
+Status: Draft (see ADR-0001 for proxy-first decision)
 
 ## Components
 1. Policy Dataset (YAML) + Schema
@@ -13,10 +13,15 @@ Status: Draft
 ## Flow (Request to Blocked Domain)
 1. User device queries disallowed domain.
 2. Internal DNS returns redirect host IP (A/AAAA) or CNAME chain to redirect host.
-3. Browser requests `http(s)://original-domain/...` hitting redirect web server.
-4. Web server resolves domain classification:
-   a. From query parameters (preferred), OR
-   b. Host header lookup if parameters absent.
+3. Browser requests `http(s)://original-domain/...` but traffic is handled by a proxy/gateway.
+4. Web server (sb29-guard) resolves the original domain using header inference with this precedence:
+  a. `X-Original-Host`
+  b. first `X-Forwarded-Host`
+  c. `Referer` (host portion)
+  d. Optional query param `d` (display-only) if no informative header is present
+  e. `Host` header only if explicitly enabled via SB29_ALLOW_HOST_FALLBACK=true
+  Notes:
+  - Query params d/c/v/h are validated and affect display only; classification still comes from the in-memory policy.
 5. Response: Explanation page (HTML) or JSON (if API call) with rationale.
 6. Metrics counters update (refresh events visible at /metrics).
 
@@ -41,8 +46,11 @@ Record {
 - rpz: CNAME rewrite using Response Policy Zone.
 
 ## Redirect Strategies
-- direct_page: DNS sends user to IP hosting explanation; server inspects Host header.
-- http_redirect: Initial minimal virtual host always 302 to `/explain?...` with query parameters.
+- Model A: Header-injection reverse proxy (preferred). Proxy terminates TLS and forwards to sb29-guard while setting `X-Original-Host: <blocked-domain>`.
+- Model B: 302 redirect to a static explain site. Proxy redirects to `/explain?d=<blocked-domain>&c=<classification>&v=<version>&h=<hash>` on a host you control with a valid cert.
+  - In both models, sb29-guard treats d/c/v/h as display-only and resolves classification from policy.
+
+See ADR: `docs/adr/0001-proxy-first.md`.
 
 ## Reliability Safeguards
 - Static fallback page if dynamic data load fails.

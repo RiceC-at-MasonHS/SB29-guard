@@ -12,6 +12,8 @@ sb29guard
   generate-dns   Produce DNS artifacts (hosts/bind/unbound/rpz/dnsmasq/domain-list/winps)
   serve          Start redirect web service
   hash           Output normalized policy hash & version metadata
+  generate-proxy Generate proxy snippets (caddy|nginx|haproxy|apache) for School Mode
+  generate-explain-static  Emit static explain page bundle
 ```
 
 ## Global Flags
@@ -83,6 +85,12 @@ Flags (override config):
 Endpoints:
 - `GET /` human-friendly landing.
 - `GET /explain` explanation page (HTML).
+Query parameters (display-only; strict validation):
+- `d` original domain (hostname only)
+- `c` classification key (optional)
+- `v` policy version (optional)
+- `h` policy hash short (optional)
+Headers take precedence for authoritative lookup: `X-Original-Host` > first `X-Forwarded-Host` > `Referer(host)` > `Host` (if fallback enabled).
 - `GET /law` 302 to configured law URL (default LIS PDF; override via SB29_LAW_URL).
 - `GET /health` liveness probe (200 + minimal JSON).
 - `GET /metrics` JSON metrics (policy_version, record_count, refresh stats).
@@ -104,6 +112,22 @@ Output JSON includes: hash, record_count, version, updated.
 Prints embedded policy JSON Schema to stdout (machine retrieval), enabling external validators.
 
 ## demo-data
+## generate-proxy (new)
+Flags:
+- `--format caddy|nginx|haproxy|apache` (required)
+- `--mode header-injection|redirect` (required)
+- `--site-host <fqdn>` (required)
+- `--backend-url http://127.0.0.1:8080` (required)
+- `--explain-url https://explain.school/explain` (required in redirect mode)
+- `--out <file>` (optional)
+- `--dry-run` (optional)
+
+## generate-explain-static (new)
+Flags:
+- `--out-dir <dir>` (required)
+- `--title` (optional; default "SB29 Guard")
+- `--law-url` (optional)
+- `--inline-css` (optional; default true)
 Writes a minimal `domains.yaml` if one does not exist (safe create; refuses overwrite unless `--force`).
 
 ## sheet CSV notes

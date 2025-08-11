@@ -11,9 +11,9 @@ Why proxy-first?
 Core contract
 - Provide the original requested host to SB29-guard by either:
   1) Header-injection reverse proxy: Set X-Original-Host: <blocked-domain> and forward to sb29-guard.
-  2) 302 redirect to an explanation host: https://explain.school.example/explain?d=<blocked-domain>&c=<classification>&v=<version>&h=<hash>
+  2) 302 redirect to an explanation host: https://explain.school.example/explain?d=<blocked-domain>&c=<classification>&v=<version>&h=<hash> (all display-only)
 - SB29-guard’s inference precedence (authoritative):
-  X-Original-Host > first X-Forwarded-Host > Referer(host) > d=query param > Host (only if SB29_ALLOW_HOST_FALLBACK=true)
+  X-Original-Host > first X-Forwarded-Host > Referer(host) > Host (only if SB29_ALLOW_HOST_FALLBACK=true). Query params (d/c/v/h) are display-only.
 
 Security and privacy
 - SB29-guard and static pages strictly validate and escape the domain (hostname only; IDNA/punycode safe; length and charset limits).

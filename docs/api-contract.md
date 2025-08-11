@@ -12,8 +12,20 @@ Response 200:
 ```
 
 ## 2. Explanation Page (HTML)
-GET /explain?domain=...
+GET /explain
 - Renders HTML page.
+
+Query Parameters (display-only; strict validation; headers remain authoritative):
+- `d` original domain (hostname only)
+- `c` classification key (optional)
+- `v` policy version (optional)
+- `h` policy hash short (optional)
+
+Header precedence for resolving the original domain (first match wins):
+1. X-Original-Host
+2. X-Forwarded-Host (first value)
+3. Referer (host portion)
+4. Host (only if SB29_ALLOW_HOST_FALLBACK=true)
 
 ## 3. Metrics (JSON)
 GET /metrics
