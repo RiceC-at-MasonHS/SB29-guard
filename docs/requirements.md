@@ -6,6 +6,8 @@ Owner: Project Maintainers (Educator-led)
 Last Updated: 2025-08-08
 
 ---
+Note: Proxy-first (School Mode) addendum is available in machine-readable form at `docs/requirements.proxy.json`.
+ 
 ## 1. Purpose / Goal
 Provide a lightweight, auditable, and privacy‑respecting mechanism for K‑12 districts in Ohio to assist educators with compliance to Ohio Senate Bill 29 by transparently intercepting access to disallowed digital tools (domains) whose vendors have not executed an approved Digital Privacy Agreement (DPA). When a user (teacher / student) attempts to reach a flagged domain, they are redirected to a locally hosted explainer page describing:
 1. The original requested domain.
@@ -52,6 +54,12 @@ FR-8: Header-based domain inference when query parameters are missing. The servi
   - `X-Forwarded-Host` (first value if comma-separated)
   - `Referer` (host portion)
   Normalization rules: lowercase the host, strip URL scheme if present, trim any port (e.g., `:443`), and drop a leading `www.` label for lookup purposes. If no parameter or header yields a domain, return HTTP 400 with a clear message. When query parameters are present, they take precedence over headers.
+
+FR-PX (Proxy-first Addendum — summarized; see JSON for full contract):
+- FR-PX1: CLI `generate-proxy` outputs config snippets for caddy|nginx|haproxy|apache in modes header-injection|redirect.
+- FR-PX2: CLI `generate-explain-static` writes a static bundle (index.html, style.css, README.md) suitable for simple hosting.
+- FR-PX3: /explain accepts optional display-only params d,c,v,h (strict validation); headers and policy remain authoritative.
+- FR-PX4: Security headers unchanged; CSP remains scriptless; parameters have length/charset validation.
 
 Partial / Planned (FUTURE):
 FR-7: HTTP redirect mode toggle (currently direct page only).

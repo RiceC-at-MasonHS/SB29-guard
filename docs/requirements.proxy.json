@@ -1,0 +1,73 @@
+{
+  "spec": "sb29-guard-proxy-first",
+  "version": "0.1.0",
+  "updated": "2025-08-10",
+  "status": "planned",
+  "overview": "Proxy-first (School Mode) addendum specifying CLI generators and static explain page contract.",
+  "cli": {
+    "commands": [
+      {
+        "name": "generate-proxy",
+        "status": "planned",
+        "description": "Generate reverse-proxy config for header injection or redirect flow.",
+        "flags": [
+          { "name": "--format", "type": "enum", "values": ["caddy", "nginx", "haproxy", "apache"], "required": true },
+          { "name": "--mode", "type": "enum", "values": ["header-injection", "redirect"], "required": true },
+          { "name": "--site-host", "type": "string", "required": true, "example": "blocked.guard.school.org" },
+          { "name": "--backend-url", "type": "string", "required": true, "example": "http://127.0.0.1:8080" },
+          { "name": "--explain-url", "type": "string", "required": false, "example": "https://explain.school.org/explain" },
+          { "name": "--out", "type": "string", "required": false },
+          { "name": "--dry-run", "type": "bool", "required": false }
+        ],
+        "outputs": {
+          "caddy": "Caddyfile text",
+          "nginx": "server/location blocks",
+          "haproxy": "frontend/backend/snippets",
+          "apache": "VirtualHost snippets"
+        }
+      },
+      {
+        "name": "generate-explain-static",
+        "status": "planned",
+        "description": "Emit a static explainer page bundle suitable for simple hosting (no dynamic lookup).",
+        "flags": [
+          { "name": "--out-dir", "type": "string", "required": true },
+          { "name": "--title", "type": "string", "required": false, "default": "SB29 Guard" },
+          { "name": "--law-url", "type": "string", "required": false },
+          { "name": "--inline-css", "type": "bool", "required": false, "default": true }
+        ],
+        "bundle": ["index.html", "style.css", "README.md"]
+      }
+    ]
+  },
+  "http": {
+    "explain": {
+      "path": "/explain",
+      "query_params_display_only": [
+        { "name": "d", "alias": ["domain", "original", "original_domain"], "type": "hostname", "max": 255, "status": "planned" },
+        { "name": "c", "alias": ["classification"], "type": "enum", "values": ["NO_DPA", "PENDING_REVIEW", "EXPIRED_DPA", "LEGAL_HOLD", "OTHER"], "status": "planned" },
+        { "name": "v", "alias": ["policy_version"], "type": "semver|string", "max": 32, "status": "planned" },
+        { "name": "h", "alias": ["hash"], "type": "hex", "max": 64, "status": "planned" }
+      ],
+      "validation": {
+        "hostname_regex": "^[a-z0-9.-]+$",
+        "max_len": 255,
+        "notes": "Client-supplied params affect display only; server still prefers headers and/or in-memory policy for authoritative classification."
+      },
+      "header_precedence": ["X-Original-Host", "X-Forwarded-Host:first", "Referer:host"],
+      "security_headers": {
+        "Cache-Control": "no-store",
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Content-Security-Policy": "default-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self';"
+      }
+    }
+  },
+  "acceptance": [
+    { "id": "PX-1", "desc": "generate-proxy emits valid config for each supported format in both modes", "status": "planned" },
+    { "id": "PX-2", "desc": "generate-explain-static writes index.html, style.css, README.md; page reads d/c/v/h and renders without JS", "status": "planned" },
+    { "id": "PX-3", "desc": "When both query params and headers are present, params only affect display; lookup still uses policy unless explicitly disabled", "status": "planned" },
+    { "id": "PX-4", "desc": "All inputs validated: length caps, hostname charset, enum membership", "status": "planned" }
+  ]
+}
