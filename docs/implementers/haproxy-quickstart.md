@@ -11,6 +11,10 @@ Prereqs
 - Vhost for blocked traffic, e.g., blocked.school.local
 
 1) Generate config
+Try this first
+- Minimal haproxy.cfg to validate header-injection quickly:
+  sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > haproxy.cfg
+  haproxy -f haproxy.cfg -db
 Snippet (header-injection):
   sb29guard generate-proxy --format haproxy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run
 Bundle:

@@ -12,6 +12,11 @@ Prereqs
 
 1) Generate config
 
+Try this first
+- Minimal header-injection config to validate the flow quickly:
+  sb29guard generate-proxy --format nginx --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > nginx.conf
+  # Include nginx.conf in your nginx site and reload.
+
 Header-injection (recommended):
 - Use the CLI to emit a snippet or a bundle.
 

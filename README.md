@@ -24,10 +24,17 @@ District‑friendly tool that shows a clear, plain‑language “Why was I redir
 ## The gist
 - Show a friendly explanation page when a restricted domain is visited.
 - Keep a simple, auditable policy (YAML or Google Sheet).
-- Point DNS (A/CNAME/RPZ/hosts) to this service; the page infers the original domain safely.
+- Proxy‑first (recommended): integrate with your gateway to forward the original host or 302 to the explain page for seamless HTTPS handling.
+- DNS artifacts are supported for coarse routing, but DNS‑only cannot present a friendly page for HTTPS due to TLS/SNI.
 
 ## Get started
-- School Mode (recommended): Integrate with your proxy/gateway for seamless HTTPS redirects — see `docs/implementers/proxy.md`.
+- School Mode (recommended): Integrate with your proxy/gateway — see `docs/implementers/proxy.md`.
+  - Quickstarts: NGINX, Caddy, HAProxy, Apache
+    - `docs/implementers/nginx-quickstart.md`
+    - `docs/implementers/caddy-quickstart.md`
+    - `docs/implementers/haproxy-quickstart.md`
+    - `docs/implementers/apache-quickstart.md`
+  - GUI‑driven proxies (APIs/lists): `docs/implementers/gui-proxy.md`
 - Prefer your own stack? See implementers overview and deployment guides:
   - `docs/implementers/README.md`
   - `docs/deployment/` (BIND, Unbound, Pi-hole, Windows DNS, pfSense, OPNsense, Infoblox)
@@ -46,9 +53,14 @@ District‑friendly tool that shows a clear, plain‑language “Why was I redir
   - `go run ./cmd/sb29guard validate --policy policy/domains.example.yaml`
   - `go run ./cmd/sb29guard serve --policy policy/domains.example.yaml`
 
+Quick proxy sanity check (header‑injection):
+- With the server running: `Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:8080/explain -Headers @{ 'X-Original-Host'='exampletool.com' } | Select-Object -ExpandProperty StatusCode`
+  - Expect 200 if exampletool.com is blocked in your policy; otherwise 404 Not Classified (pass‑through model).
+
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`
 - Proxy/Gateway integration (school‑seamless, default recommendation): `docs/implementers/proxy.md`
+- One‑page quickstarts (copy/paste): see `docs/implementers/` quickstarts and `docs/implementers/gui-proxy.md`
 - Deployment guides (platform specifics): `docs/deployment/`
 - Customizing the UI/templates: `CUSTOMIZING.md`
 

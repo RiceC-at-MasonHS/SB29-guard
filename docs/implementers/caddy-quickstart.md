@@ -12,6 +12,11 @@ Prereqs
 
 1) Generate a bundle or snippet
 
+Try this first
+- Minimal Caddyfile to validate header-injection:
+  sb29guard generate-proxy --format caddy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > Caddyfile
+  caddy run --config Caddyfile
+
 Snippet (header-injection):
   sb29guard generate-proxy --format caddy --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run
 

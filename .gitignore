@@ -10,6 +10,7 @@ Thumbs.db
 /bin/
 /dist/
 /sb29guard
+sb29guard.exe
 *.exe
 *.exe~
 *.dll
@@ -25,6 +26,8 @@ go.work.sum
 # DNS / manifest outputs
 dist/dns/
 **/manifest.json
+**/*.ps1
+nginx-blocked.conf
 
 # Aggregated logs & runtime logs
 logs/

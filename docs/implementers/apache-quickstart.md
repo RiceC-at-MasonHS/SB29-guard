@@ -12,6 +12,10 @@ Prereqs
 - Enable modules: proxy, proxy_http, headers, ssl (if HTTPS)
 
 1) Generate config
+Try this first
+- Minimal guard.conf to validate header-injection:
+  sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run > guard.conf
+  # Include and reload Apache.
 Snippet:
   sb29guard generate-proxy --format apache --mode header-injection --site-host blocked.school.local --backend-url http://127.0.0.1:8080 --dry-run
 Bundle:
