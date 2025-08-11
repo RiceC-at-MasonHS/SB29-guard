@@ -122,6 +122,10 @@ Flags:
 - `--out <file>` (optional)
 - `--dry-run` (optional)
 
+See also
+- Implementers quickstarts: docs/implementers/nginx-quickstart.md, docs/implementers/caddy-quickstart.md, docs/implementers/haproxy-quickstart.md, docs/implementers/apache-quickstart.md
+- Proxy overview (School Mode): docs/implementers/proxy.md
+
 ## generate-explain-static (new)
 Flags:
 - `--out-dir <dir>` (required)
@@ -129,6 +133,9 @@ Flags:
 - `--law-url` (optional)
 - `--inline-css` (optional; default true)
 Writes a minimal `domains.yaml` if one does not exist (safe create; refuses overwrite unless `--force`).
+
+See also
+- GUI/list integrations consuming the page via redirect: docs/implementers/gui-proxy.md
 
 ## sheet CSV notes
 Published CSV mode uses ETag/Last-Modified caching and retries; metrics record refresh_count and last_refresh_source (csv|csv-cache).

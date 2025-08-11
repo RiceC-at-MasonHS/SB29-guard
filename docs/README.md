@@ -5,6 +5,8 @@ Start here if you’re building or integrating SB29-guard.
 For humans
 - Implementers overview: docs/implementers-overview.md
 - Proxy/Gateway guide (School Mode): docs/implementers/proxy.md
+ - Quickstarts: NGINX, Caddy, HAProxy, Apache — see docs/implementers/ (nginx-quickstart.md, caddy-quickstart.md, haproxy-quickstart.md, apache-quickstart.md)
+ - GUI-driven proxies: docs/implementers/gui-proxy.md
 - Deployment targets: docs/deployment/ (Bind/Unbound/pfSense/OPNsense/Infoblox/Pi-hole/Windows DNS)
 - HTTPS/TLS specifics: docs/implementers/https.md
 - Container/Kubernetes: docs/implementers/container.md

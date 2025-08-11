@@ -3,6 +3,7 @@ package server
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net"
@@ -110,6 +111,8 @@ func (s *Server) Start() error {
 	http.HandleFunc("/health", s.handleHealth)
 	http.HandleFunc("/metrics", s.handleMetrics)
 	http.HandleFunc("/law", s.handleLaw)
+	http.HandleFunc("/classify", s.handleClassify)
+	http.HandleFunc("/domain-list", s.handleDomainList)
 	http.HandleFunc("/explain", s.handleExplain)
 	http.HandleFunc("/", s.handleRoot)
 	return http.ListenAndServe(s.addr, nil)
@@ -164,7 +167,8 @@ func (s *Server) handleMetrics(w http.ResponseWriter, _ *http.Request) {
 func (s *Server) handleExplain(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	q := r.URL.Query()
-	orig := firstNonEmpty(q.Get("original_domain"), q.Get("original"), q.Get("domain"), q.Get("url"))
+	// Accept short alias 'd' (display-only param in redirect mode) as highest-precedence query value
+	orig := firstNonEmpty(q.Get("d"), q.Get("original_domain"), q.Get("original"), q.Get("domain"), q.Get("url"))
 	if orig == "" {
 		// No query param provided—attempt to infer from headers (DNS redirect scenario)
 		orig = extractOriginalDomainFromHeaders(r, s.allowHostFallback)
@@ -241,6 +245,73 @@ func (s *Server) handleLaw(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Frame-Options", "DENY")
 	target := s.lawURL
 	http.Redirect(w, r, target, http.StatusFound)
+}
+
+// handleClassify returns a small JSON response indicating whether a domain is classified
+// and, if so, the classification value. Query params: d|domain|original
+func (s *Server) handleClassify(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	q := r.URL.Query()
+	d := firstNonEmpty(q.Get("d"), q.Get("domain"), q.Get("original"))
+	if d == "" {
+		// As a convenience, attempt to derive from headers similar to explain, but do not enable Host fallback
+		d = extractOriginalDomainFromHeaders(r, false)
+	}
+	if strings.Contains(d, "://") {
+		if u, err := url.Parse(d); err == nil && u.Host != "" {
+			d = u.Host
+		}
+	}
+	d = strings.ToLower(strings.TrimSpace(d))
+	// normalize host:port and www
+	if strings.Contains(d, ":") {
+		if strings.HasPrefix(d, "[") {
+			if h, _, err := net.SplitHostPort(d); err == nil {
+				d = strings.Trim(h, "[]")
+			}
+		} else {
+			if h, _, err := net.SplitHostPort(d); err == nil {
+				d = h
+			}
+		}
+	}
+	norm := strings.TrimPrefix(d, "www.")
+	p := s.getPolicy()
+	rec, ok := p.Lookup(norm)
+	type resp struct {
+		Domain         string `json:"domain"`
+		Normalized     string `json:"normalized_domain"`
+		Found          bool   `json:"found"`
+		Classification string `json:"classification,omitempty"`
+		PolicyVersion  string `json:"policy_version"`
+	}
+	out := resp{Domain: d, Normalized: norm, Found: ok, PolicyVersion: p.Version}
+	if ok {
+		out.Classification = rec.Classification
+	}
+	_ = json.NewEncoder(w).Encode(out)
+}
+
+// handleDomainList emits a plaintext list of domains from the active policy.
+// Wildcards ("*.example.com") are represented as two lines: ".example.com" and "example.com".
+func (s *Server) handleDomainList(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	// modest caching can be enabled by operator; default to no-store for simplicity
+	w.Header().Set("Cache-Control", "no-store")
+	p := s.getPolicy()
+	for _, r := range p.Records {
+		if r.Status == "suspended" {
+			continue
+		}
+		d := strings.ToLower(strings.TrimSpace(r.Domain))
+		if strings.HasPrefix(d, "*.") {
+			base := strings.TrimPrefix(d, "*.")
+			_, _ = fmt.Fprintln(w, base)
+			_, _ = fmt.Fprintln(w, "."+base)
+		} else {
+			_, _ = fmt.Fprintln(w, d)
+		}
+	}
 }
 
 // UpdatePolicy swaps the in-memory policy used by the server.

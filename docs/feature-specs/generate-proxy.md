@@ -26,4 +26,8 @@ Validation
 
 Acceptance
 - PX-1: Valid snippets render for all formats and both modes.
-- Examples included in docs/implementers/proxy.md.
+- Examples included in docs/implementers/proxy.md and one-page quickstarts:
+  - docs/implementers/nginx-quickstart.md
+  - docs/implementers/caddy-quickstart.md
+  - docs/implementers/haproxy-quickstart.md
+  - docs/implementers/apache-quickstart.md

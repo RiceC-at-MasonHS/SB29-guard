@@ -21,3 +21,8 @@ Validation
 
 Acceptance
 - PX-2: Writes all files; renders without JS; parameters affect display only.
+
+See also
+- Proxy overview (School Mode): docs/implementers/proxy.md
+- GUI/list integrations that use redirects: docs/implementers/gui-proxy.md
+- Web-server quickstarts: docs/implementers/nginx-quickstart.md, docs/implementers/apache-quickstart.md, docs/implementers/caddy-quickstart.md, docs/implementers/haproxy-quickstart.md

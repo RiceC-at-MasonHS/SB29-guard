@@ -444,3 +444,47 @@ func TestHandleLawRedirect(t *testing.T) {
 		t.Fatalf("unexpected law redirect target: %s", loc)
 	}
 }
+
+func TestClassifyEndpointFoundAndNotFound(t *testing.T) {
+	srv := newTestServer(t)
+	// Found
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/classify?d=exampletool.com", nil)
+	srv.handleClassify(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	body := rr.Body.String()
+	if !strings.Contains(body, "\"found\":true") || !strings.Contains(body, "\"classification\":") {
+		t.Fatalf("unexpected classify body: %s", body)
+	}
+	// Not found
+	rr = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodGet, "/classify?d=missing.example", nil)
+	srv.handleClassify(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "\"found\":false") {
+		t.Fatalf("expected found=false: %s", rr.Body.String())
+	}
+}
+
+func TestDomainListEndpoint(t *testing.T) {
+	srv := newTestServer(t)
+	rr := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/domain-list", nil)
+	srv.handleDomainList(rr, req)
+	if rr.Code != 200 {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	body := rr.Body.String()
+	// Should contain exampletool.com
+	if !strings.Contains(body, "exampletool.com") {
+		t.Fatalf("missing exampletool.com in domain list: %s", body)
+	}
+	// And wildcard represented as base and .base
+	if !strings.Contains(body, "trackingwidgets.io") || !strings.Contains(body, ".trackingwidgets.io") {
+		t.Fatalf("wildcard representation missing: %s", body)
+	}
+}

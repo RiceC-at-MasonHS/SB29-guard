@@ -4,6 +4,8 @@ This document summarizes deployment options and points to detailed guides.
 
 Recommended path:
 - Proxy/Gateway integration (School Mode): docs/implementers/proxy.md
+	- One-page quickstarts: docs/implementers/nginx-quickstart.md, docs/implementers/caddy-quickstart.md, docs/implementers/haproxy-quickstart.md, docs/implementers/apache-quickstart.md
+	- GUI/list integrations: docs/implementers/gui-proxy.md
 
 Other options:
 - VM/Bare-metal: docs/implementers/vm.md

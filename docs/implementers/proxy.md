@@ -4,6 +4,13 @@ Status: Stable recommendation for K–12 networks
 
 This guide shows how to integrate SB29-guard with your school’s web filter/forward proxy so teachers and students get a seamless, friendly explanation page with zero warnings or extra clicks.
 
+Quickstarts
+- NGINX: docs/implementers/nginx-quickstart.md
+- Caddy: docs/implementers/caddy-quickstart.md
+- HAProxy: docs/implementers/haproxy-quickstart.md
+- Apache httpd: docs/implementers/apache-quickstart.md
+- GUI-driven proxies (APIs/lists): docs/implementers/gui-proxy.md
+
 Why proxy-first?
 - HTTPS reality: DNS-only CNAME/A overrides for blocked sites won’t display a friendly page on HTTPS due to certificate/SNI mismatch. The browser fails TLS before any redirect.
 - Proxies solve this: School gateways terminate TLS (using a trusted internal CA on managed devices) and can inject headers or send controlled 302 redirects.
@@ -14,6 +21,10 @@ Core contract
   2) 302 redirect to an explanation host: https://explain.school.example/explain?d=<blocked-domain>&c=<classification>&v=<version>&h=<hash> (all display-only)
 - SB29-guard’s inference precedence (authoritative):
   X-Original-Host > first X-Forwarded-Host > Referer(host) > Host (only if SB29_ALLOW_HOST_FALLBACK=true). Query params (d/c/v/h) are display-only.
+  
+See also
+- CLI to generate configs: docs/feature-specs/generate-proxy.md
+- Static explain page bundle: docs/feature-specs/generate-explain-static.md
 
 Security and privacy
 - SB29-guard and static pages strictly validate and escape the domain (hostname only; IDNA/punycode safe; length and charset limits).

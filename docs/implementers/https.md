@@ -7,6 +7,12 @@ Goal: serve the explanation pages over HTTPS without browser warnings, with mini
 - Use public certificates from Let’s Encrypt (ACME) for public DNS names, or internal CA certs for private names.
 - Automate renewal (cron/systemd timers or built-in resolvers like Traefik/Caddy).
 
+See quickstarts
+- NGINX: docs/implementers/nginx-quickstart.md
+- Caddy: docs/implementers/caddy-quickstart.md
+- HAProxy: docs/implementers/haproxy-quickstart.md
+- Apache: docs/implementers/apache-quickstart.md
+
 ## Let’s Encrypt (Nginx + Certbot)
 ```
 sudo apt install nginx certbot python3-certbot-nginx

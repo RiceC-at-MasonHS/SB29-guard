@@ -440,6 +440,36 @@ func TestCmdGenerateDNSFunction(t *testing.T) {
 	}
 }
 
+func TestCmdGenerateProxyDryRunCaddyHeader(t *testing.T) {
+	out := captureOutput(t, func() {
+		cmdGenerateProxy([]string{"--format", "caddy", "--mode", "header-injection", "--site-host", "blocked.local", "--backend-url", "http://127.0.0.1:8080", "--dry-run"})
+	})
+	if !strings.Contains(out, "reverse_proxy") || !strings.Contains(out, "X-Original-Host") {
+		t.Fatalf("unexpected caddy output: %s", out)
+	}
+}
+
+func TestCmdGenerateProxyDryRunNginxRedirect(t *testing.T) {
+	out := captureOutput(t, func() {
+		cmdGenerateProxy([]string{"--format", "nginx", "--mode", "redirect", "--site-host", "blocked.local", "--explain-url", "https://x/explain", "--dry-run"})
+	})
+	if !strings.Contains(out, "return 302") || !strings.Contains(out, "?d=$host") {
+		t.Fatalf("unexpected nginx redirect output: %s", out)
+	}
+}
+
+func TestCmdGenerateExplainStaticOutDir(t *testing.T) {
+	td := t.TempDir()
+	// create a subdir
+	outDir := filepath.Join(td, "bundle")
+	// Dry-run isn't necessary; the command writes files
+	cmdGenerateExplainStatic([]string{"--out-dir", outDir, "--title", "T"})
+	// Verify index.html exists
+	if _, err := os.Stat(filepath.Join(outDir, "index.html")); err != nil {
+		t.Fatalf("expected index.html: %v", err)
+	}
+}
+
 // captureOutput captures stdout produced by f.
 func captureOutput(t *testing.T, f func()) string {
 	t.Helper()
