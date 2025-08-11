@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SB29-guard – Explanation</title>
+    <meta name="description" content="Why you were redirected: a friendly explanation page for student data privacy (SB29)." />
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 24px; }
+      header { display: flex; align-items: center; gap: 12px; }
+      .badge { font-weight: 600; color: #0b7; }
+      h1 { margin: 0.2rem 0 0.6rem; font-size: 1.6rem; }
+      .panel { border: 1px solid rgba(120,120,120,.3); border-radius: 10px; padding: 18px; margin: 16px 0; }
+      .domain { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 600; }
+      .muted { opacity: .8; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap: 12px; }
+      a.btn { display: inline-block; padding: 10px 14px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(120,120,120,.35); }
+      footer { margin-top: 28px; font-size: .95rem; }
+      .inline { display: inline-flex; gap: 8px; align-items: center; }
+      input[type=text] { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(120,120,120,.35); min-width: 260px; }
+      button { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(120,120,120,.35); cursor: pointer; }
+      code { background: rgba(127,127,127,.12); padding: 0 4px; border-radius: 4px; }
+    </style>
+    <script>
+      function getParam(name) {
+        const u = new URL(window.location.href);
+        return u.searchParams.get(name) || "";
+      }
+      function setText(id, text) {
+        var el = document.getElementById(id); if (el) { el.textContent = text; }
+      }
+      function updateFromParam() {
+        const d = (getParam('d') || '').trim();
+        const domain = d.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+        setText('domain', domain || '');
+        // Update demo links
+        const stud = document.getElementById('studentLink');
+        if (stud) stud.href = 'student.html' + (domain ? ('?d=' + encodeURIComponent(domain)) : '');
+        const copyBtn = document.getElementById('copyBtn');
+        if (copyBtn) copyBtn.disabled = !domain;
+        const preview = document.getElementById('previewExplainLink');
+        if (preview) preview.href = './?d=' + encodeURIComponent(domain || 'exampletool.com');
+      }
+      function copyDeepLink() {
+        const u = new URL(window.location.href);
+        const d = document.getElementById('domain')?.textContent || '';
+        if (d) { u.searchParams.set('d', d); }
+        navigator.clipboard.writeText(u.toString()).then(()=>{
+          const t = document.getElementById('copied'); if (t) { t.hidden = false; setTimeout(()=>t.hidden=true, 1600); }
+        });
+      }
+      function handleTryDomain(ev){
+        ev.preventDefault();
+        const inp = document.getElementById('tryInput');
+        const v = (inp?.value || '').trim();
+        const u = new URL(window.location.href);
+        u.searchParams.set('d', v);
+        window.location.href = u.toString();
+      }
+      window.addEventListener('DOMContentLoaded', updateFromParam);
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="badge">SB29‑guard</div>
+        <div class="muted">Static explanation page</div>
+      </header>
+      <h1>Access redirected for <span class="domain" id="domain">exampletool.com</span></h1>
+      <div class="panel">
+        <p>
+          Your district blocks some websites to protect student data and follow the law (SB29 context). This page explains
+          what that means in plain language and what to do next.
+        </p>
+        <p class="muted">Tip: Add <code>?d=exampletool.com</code> to this page’s URL to show a specific domain.</p>
+        <form class="inline" onsubmit="handleTryDomain(event)">
+          <label for="tryInput" class="muted">Preview domain:</label>
+          <input id="tryInput" type="text" inputmode="url" placeholder="exampletool.com" />
+          <button type="submit">Show</button>
+          <button type="button" id="copyBtn" onclick="copyDeepLink()">Copy link</button>
+          <span id="copied" class="muted" hidden>Copied ✓</span>
+        </form>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h3>Why am I seeing this?</h3>
+          <p>
+            Some sites collect student information. Districts only allow sites that have a data privacy agreement
+            with the district. If there’s no agreement on file, the site is redirected to this page.
+          </p>
+          <p>
+            This static page is a cache‑friendly preview. District deployments use a live version that can
+            include more detail.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>What can I do?</h3>
+          <ul>
+            <li>If you’re a student: ask your teacher if this site is needed for class.</li>
+            <li>If you’re a teacher: submit the site for review via your district’s process.</li>
+            <li>Try an approved alternative if available.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="inline" style="gap:12px; flex-wrap:wrap">
+          <a class="btn" id="studentLink" href="student.html">Student explainer</a>
+          <a class="btn" href="https://github.com/RiceC-at-MasonHS/SB29-guard">Project on GitHub</a>
+          <a class="btn" href="./implementers/proxy.md">Operator guide</a>
+          <a class="btn" id="previewExplainLink" href="./?d=exampletool.com">Preview this page</a>
+        </div>
+      </div>
+
+      <footer class="muted">
+        This page is published via GitHub Pages. Operators can embed a similar static page using the project’s
+        <code>generate-explain-static</code> command or run the server variant for dynamic details.
+      </footer>
+    </div>
+  </body>
+  </html>

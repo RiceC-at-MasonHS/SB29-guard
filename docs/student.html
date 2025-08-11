@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SB29-guard – Student Explainer</title>
+    <meta name="description" content="A beginner-friendly guide to student data privacy and why some sites are blocked." />
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 24px; }
+      header { display: flex; align-items: center; gap: 12px; }
+      .badge { font-weight: 600; color: #0b7; }
+      h1 { margin: 0.2rem 0 0.6rem; font-size: 1.6rem; }
+      .panel { border: 1px solid rgba(120,120,120,.3); border-radius: 10px; padding: 18px; margin: 16px 0; }
+      .muted { opacity: .8; }
+      a.btn { display: inline-block; padding: 10px 14px; border-radius: 8px; text-decoration: none; border: 1px solid rgba(120,120,120,.35); }
+      .inline { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      code { background: rgba(127,127,127,.12); padding: 0 4px; border-radius: 4px; }
+    </style>
+    <script>
+      function getParam(name) {
+        const u = new URL(window.location.href);
+        return u.searchParams.get(name) || "";
+      }
+      function updateLinks() {
+        const d = (getParam('d')||'').trim();
+        const href = d ? ('index.html?d=' + encodeURIComponent(d)) : 'index.html';
+        const back = document.getElementById('backLink');
+        if (back) back.href = href;
+      }
+      window.addEventListener('DOMContentLoaded', updateLinks);
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="badge">SB29‑guard</div>
+        <div class="muted">Student explainer</div>
+      </header>
+      <h1>Why are some websites blocked at school?</h1>
+
+      <div class="panel">
+        <h3>Privacy and safety</h3>
+        <p>
+          Schools protect student information. Some websites collect data like names or email addresses. Before a site can
+          be used in class, the district checks it and signs an agreement that limits how the site can use student data.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h3>What is SB29‑guard?</h3>
+        <p>
+          It’s a tool that shows a clear message when a blocked site is opened. Instead of just saying “blocked,” it
+          explains why and what to do next. It helps teachers and students understand the process.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h3>What should I do if I see the page?</h3>
+        <ul>
+          <li>Ask your teacher if you need the site for class.</li>
+          <li>Your teacher can request that the district review the site.</li>
+          <li>Use an approved alternative if one is available.</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Learn a bit of the tech</h3>
+        <p>
+          When you visit a website, your browser asks the site’s server for a page. Schools can route that request through
+          a gateway (a kind of helper) that checks if the site is approved. If it’s not, you’ll be redirected to the
+          explanation page you saw.
+        </p>
+        <p class="muted">Curious? Check the project on GitHub or read the operator docs to see how it works.</p>
+      </div>
+
+      <div class="panel">
+        <div class="inline">
+          <a class="btn" id="backLink" href="index.html">Back to explanation</a>
+          <a class="btn" href="https://github.com/RiceC-at-MasonHS/SB29-guard">Project on GitHub</a>
+          <a class="btn" href="./implementers/proxy.md">Operator guide</a>
+        </div>
+      </div>
+
+      <footer class="muted">
+        You’re learning how the web works: requests, redirects, and privacy. Keep exploring!
+      </footer>
+    </div>
+  </body>
+  </html>
