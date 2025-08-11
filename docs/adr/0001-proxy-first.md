@@ -12,7 +12,7 @@ Decision
 - Two primary models:
   1) Header-injection reverse proxy to dynamic /explain (preferred where possible).
   2) 302 redirect to a static explain site that reads d/c/v/h params (display-only).
-- Deprecate legacy easy-mode; remove code/docs and steer operators to proxy guide.
+- Proxy-first is the sole recommended path; operators should follow the proxy guide.
 
 Consequences
 - Seamless HTTPS UX; fewer warnings and support issues.

@@ -1,4 +1,4 @@
-## (legacy) easy-mode was removed in v1.2.0; no ignores remain for it
+## Project gitignore
 
 # OS / editor
 .DS_Store
