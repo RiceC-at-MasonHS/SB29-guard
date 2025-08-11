@@ -35,6 +35,14 @@ Set-and-forget
 - If you need a host map within HAProxy, generate `blocked.map` nightly from YAML or the Google Sheet and update via the Runtime API (no reload) when possible; otherwise perform a quick reload.
 - Alternatively, use the GUI/list route by importing `/domain-list` into your filtering product via the provided scripts.
 
+Runtime API setup (optional)
+- In haproxy.cfg, enable a local admin socket to allow map updates:
+```
+global
+	stats socket ipv4@127.0.0.1:9999 level admin
+```
+- Then use the provided scripts to clear and repopulate your map without a full service reload.
+
 See also
 - Example bundle: dist/haproxy/README.md
 - Proxy overview: docs/implementers/proxy.md
