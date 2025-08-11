@@ -57,6 +57,9 @@ Quick proxy sanity check (header‑injection):
 - With the server running: `Invoke-WebRequest -UseBasicParsing -Uri http://127.0.0.1:8080/explain -Headers @{ 'X-Original-Host'='exampletool.com' } | Select-Object -ExpandProperty StatusCode`
   - Expect 200 if exampletool.com is blocked in your policy; otherwise 404 Not Classified (pass‑through model).
 
+Local examples:
+- Generate example proxy bundles locally: `make examples` (writes to `dist/`, which is ignored by git)
+
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`
 - Proxy/Gateway integration (school‑seamless, default recommendation): `docs/implementers/proxy.md`

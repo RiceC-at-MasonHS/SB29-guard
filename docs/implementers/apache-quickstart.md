@@ -29,6 +29,10 @@ Notes
 - For HTTPS, configure SSLCertificateFile/SSLCertificateKeyFile on the vhost.
 - Static explain (redirect model): sb29guard generate-explain-static --out-dir dist/explain and host it.
 
+Set-and-forget
+- Keep Apache static as a forwarder; sb29-guard refreshes nightly when using `--sheet-csv`. No Apache reloads required for policy changes.
+- If you must hold a list within Apache or an upstream component, schedule importing `/domain-list` using the scripts linked in `docs/implementers/gui-proxy.md` and reload that component.
+
 See also
 - Example bundle: dist/apache/README.md
 - Proxy overview: docs/implementers/proxy.md

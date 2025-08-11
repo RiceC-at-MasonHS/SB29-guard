@@ -27,3 +27,13 @@ Tips
 - Keep TLS trusted for your internal host so clients never see warnings.
 - Cache results conservatively and refresh on policy updates. The JSON response includes policy_version to help invalidations.
 - For a static explain page, generate it with: sb29guard generate-explain-static --out-dir dist/explain
+
+Automation (set-and-forget)
+- If your proxy supports scheduled imports, point it at `https://guard.school.internal/domain-list` on a nightly schedule after SB29‑guard’s CSV refresh window (default 23:59 local; override with `--refresh-at`).
+- If the proxy requires a file, pull then import:
+  - Windows Task Scheduler: `curl -sS https://guard.school.internal/domain-list -o C:\\sb29\\blocked.txt` then run the proxy’s CLI/import API.
+  - Linux cron: `curl -sS https://guard.school.internal/domain-list -o /etc/proxy/blocked.txt && proxyctl reload`
+- Use `/metrics` (policy_version, last_refresh_time) to decide when to invalidate caches or trigger imports.
+ - Ready-made scripts (customize and schedule):
+   - Windows: `docs/implementers/scripts/windows-fetch-and-import.ps1`
+   - Linux: `docs/implementers/scripts/linux-fetch-and-reload.sh`

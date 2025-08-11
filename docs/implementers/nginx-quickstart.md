@@ -35,6 +35,13 @@ Notes
 - Denylist model: non-listed domains return 404 Not Classified (proxy should pass through).
 - Static explain (redirect model): sb29guard generate-explain-static --out-dir dist/explain and host it.
 
+Set-and-forget
+- Best: keep NGINX as a static forwarder (header-injection) and let sb29-guard refresh the Google Sheet nightly. No NGINX reloads required.
+- If you need NGINX to hold a list/map (selective routing), regenerate nightly and reload:
+	- Use `--policy` or `--sheet-csv` with the nginx bundle to produce `blocked_map.conf` and include it under `http {}`.
+	- Schedule a job to rebuild `blocked_map.conf` and run `nginx -s reload`.
+- GUI-style import? Instead of maps, point your filter to `/domain-list` and schedule an import using the ready-made scripts.
+
 See also
 - Example bundle: dist/nginx/README.md
 - Proxy overview: docs/implementers/proxy.md

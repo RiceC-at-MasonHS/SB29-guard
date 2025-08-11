@@ -28,6 +28,10 @@ Notes
 - Header precedence: X-Original-Host > X-Forwarded-Host > Referer.
 - Static explain (redirect model): sb29guard generate-explain-static --out-dir dist/explain and host it.
 
+Set-and-forget
+- Keep Caddy’s config static (header-injection or redirect). sb29-guard refreshes policy nightly from Google Sheets; no Caddy reloads needed.
+- If your environment insists on ingesting a list inside Caddy or a filter upstream, schedule importing `/domain-list` with the provided scripts and reload that component as required.
+
 See also
 - Example bundle: dist/caddy/README.md
 - Proxy overview: docs/implementers/proxy.md

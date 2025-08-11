@@ -11,6 +11,12 @@ Operator checklist
 - Forward X-Original-Host (and X-Forwarded-Host) to sb29-guard OR send 302 to your explain host
 - Verify: blocked domain shows the explain page; non-listed returns 404 (pass-through)
 
+Hands-off (set-and-forget)
+- Policy source: default is a YAML file; alternatively use a Google Sheet published as CSV with `--sheet-csv <url>`.
+- Auto-refresh: when started with `--sheet-csv`, the server refreshes nightly at 23:59 by default (configurable via `--refresh-at HH:MM` or `--refresh-every 2h`). It hot-swaps the in-memory policy without restarts.
+- No proxy reloads: in header-injection mode the proxy just forwards; updated classifications take effect immediately in SB29‑guard. Keep proxy config static.
+- Resilience: conditional requests (ETag/Last-Modified), on-disk cache, last-known-good policy retained on failures. Check `/metrics` for refresh stats and last error.
+
 Quickstarts
 - NGINX: docs/implementers/nginx-quickstart.md
 - Caddy: docs/implementers/caddy-quickstart.md
@@ -155,13 +161,6 @@ Verification
 - Header-injection: curl -H "X-Original-Host: example.com" https://guard.school.internal/explain
   Expect HTML showing example.com.
 - Redirect: visit https://block.school.internal/blocked for an HTTPS site; ensure you land on https://explain.school.example/explain?d=example.com with no warnings.
-
-Rollout checklist
-- Choose a model (header-injection or redirect).
-- Use the examples above (or generated configs) and replace domains/ports.
-- Ensure explain host has a valid cert (custom domain).
-- Test with a few known blocked domains.
-- Roll out broadly; keep TTLs modest in DNS for quick adjustments.
 
 FAQ
 - Can we keep DNS RPZ? Yes. Use RPZ to coarsely classify, but rely on your proxy to deliver the user experience. DNS-only won’t produce a seamless page on HTTPS.
