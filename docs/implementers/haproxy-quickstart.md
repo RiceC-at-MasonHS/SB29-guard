@@ -2,6 +2,9 @@
 
 Goal: route blocked traffic to an explanation flow using HAProxy.
 
+Preview
+![Explain page screenshot](../../screenshot-2025-08-09-204319.png)
+
 Models
 - Header-injection reverse proxy (preferred): forward to sb29-guard with X-Original-Host
 - Redirect to static explain: 302 to an explain site that reads d,c,v,h
@@ -36,3 +39,6 @@ Selective routing map (optional)
 
 Notes
 - Ensure required modules/ACLs are enabled; check logs if 404 occurs.
+
+See example bundle
+- dist/haproxy/README.md

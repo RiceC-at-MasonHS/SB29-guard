@@ -2,6 +2,9 @@
 
 Goal: show a friendly explain page for blocked sites using Apache.
 
+Preview
+![Explain page screenshot](../../screenshot-2025-08-09-204319.png)
+
 Models
 - Header-injection reverse proxy (preferred): ProxyPass to sb29-guard and set X-Original-Host/X-Forwarded-Host
 - Redirect to static explain: 302 to an explain site that reads d,c,v,h
@@ -34,3 +37,6 @@ Redirect variant:
 Notes
 - For HTTPS, configure SSLCertificateFile/SSLCertificateKeyFile on the vhost.
 - To host a static explain page, run generate-explain-static and serve the folder.
+
+See example bundle
+- dist/apache/README.md

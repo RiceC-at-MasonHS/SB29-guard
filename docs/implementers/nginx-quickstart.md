@@ -2,6 +2,9 @@
 
 Goal: deploy SB29-guard behind NGINX so blocked requests show a friendly explain page. Two models are supported; pick one.
 
+Preview
+![Explain page screenshot](../../screenshot-2025-08-09-204319.png)
+
 - Model A — header-injection reverse proxy (preferred): NGINX proxies to sb29-guard and sets X-Original-Host.
 - Model B — redirect to static explain: NGINX sends an HTTP 302 to a static page that reads d,c,v,h from the URL.
 
@@ -49,3 +52,6 @@ Notes
 - Policy lookup is denylist style: if not found, guard returns 404 Not Classified. Your proxy should pass-through in that case (non-interruptive).
 - Use blocked_map.conf for selective routing only if your main proxy needs to detect blocked hosts without calling the API.
 - For static explain, generate with: sb29guard generate-explain-static --out-dir dist/explain, and host it on your web server.
+
+See example bundle
+- dist/nginx/README.md

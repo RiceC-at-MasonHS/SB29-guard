@@ -2,6 +2,9 @@
 
 Goal: deploy SB29-guard with Caddy so blocked requests show a friendly explain page.
 
+Preview
+![Explain page screenshot](../../screenshot-2025-08-09-204319.png)
+
 Models
 - Header-injection reverse proxy (preferred): forward to sb29-guard with X-Original-Host
 - Redirect to static explain: 302 to an explain site that reads d,c,v,h
@@ -37,3 +40,6 @@ Redirect version:
 Notes
 - Header precedence: X-Original-Host > X-Forwarded-Host > Referer.
 - Use generate-explain-static to host a static page if you prefer the redirect model.
+
+See example bundle
+- dist/caddy/README.md

@@ -4,6 +4,13 @@ Status: Stable recommendation for K–12 networks
 
 This guide shows how to integrate SB29-guard with your school’s web filter/forward proxy so teachers and students get a seamless, friendly explanation page with zero warnings or extra clicks.
 
+Operator checklist
+- Pick your proxy: NGINX, Caddy, HAProxy, Apache (see quickstarts below)
+- Choose a model: header-injection (preferred) or redirect to static explain
+- Set a vhost (e.g., blocked.school.local) with a trusted cert
+- Forward X-Original-Host (and X-Forwarded-Host) to sb29-guard OR send 302 to your explain host
+- Verify: blocked domain shows the explain page; non-listed returns 404 (pass-through)
+
 Quickstarts
 - NGINX: docs/implementers/nginx-quickstart.md
 - Caddy: docs/implementers/caddy-quickstart.md

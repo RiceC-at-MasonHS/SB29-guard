@@ -8,7 +8,10 @@ Thumbs.db
 
 # Build outputs / compiled binaries
 /bin/
-/dist/
+# Dist output (local bundles & artifacts)
+/dist/*
+!/dist/README.md
+!/dist/.gitkeep
 /sb29guard
 sb29guard.exe
 *.exe
