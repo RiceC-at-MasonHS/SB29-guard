@@ -8,6 +8,11 @@
 # 3) Add line (10 minutes after nightly refresh):
 #    10 0 * * * /usr/local/bin/sb29-fetch-and-reload.sh
 
+# Env overrides (optional):
+#   GUARD_BASE=https://guard.school.internal
+#   OUT_FILE=/etc/proxy/blocked.txt
+#   ONLY_WHEN_CHANGED=true
+
 set -euo pipefail
 # Allow env overrides; fall back to sensible defaults
 GUARD_BASE="${GUARD_BASE:-https://guard.school.internal}"

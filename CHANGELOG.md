@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.1 (2025-08-11)
+
+Patch:
+- Fix CI failure in script tests by resolving script paths from repo root.
+- Linux automation script now honors env overrides (GUARD_BASE, OUT_FILE, ONLY_WHEN_CHANGED) for easier testing and customization.
+
 ## v1.2.0 (2025-08-11)
 
 Highlights:

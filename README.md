@@ -63,6 +63,7 @@ Local examples:
 Automation scripts
 - Windows nightly fetch/import: `docs/implementers/scripts/windows-fetch-and-import.ps1`
 - Linux nightly fetch/reload: `docs/implementers/scripts/linux-fetch-and-reload.sh`
+  - Env overrides supported: GUARD_BASE, OUT_FILE, ONLY_WHEN_CHANGED
 
 ## Operators: where to read more
 - Technical Reference (headers, caching, CSV refresh, metrics, verification): `TECHNICAL.md`
