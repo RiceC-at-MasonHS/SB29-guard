@@ -16,6 +16,27 @@ import (
 	"time"
 )
 
+// repoRoot walks up from the current working directory until it finds a go.mod,
+// returning that directory. Tests use this to build absolute paths to repo files
+// regardless of the package-level working directory that `go test` uses.
+func repoRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatalf("could not locate repo root (go.mod) starting from %s", dir)
+		}
+		dir = parent
+	}
+}
+
 // TestLinuxScript_FetchAndGate exercises the linux-fetch-and-reload.sh script against a mocked server.
 // It requires a Unix-like environment with /bin/bash available. The test is skipped on Windows.
 func TestLinuxScript_FetchAndGate(t *testing.T) {
@@ -55,7 +76,7 @@ func TestLinuxScript_FetchAndGate(t *testing.T) {
 	}
 
 	// Run the script forcing ONLY_WHEN_CHANGED=false to always fetch
-	scriptPath := filepath.FromSlash("docs/implementers/scripts/linux-fetch-and-reload.sh")
+	scriptPath := filepath.Join(repoRoot(t), "docs", "implementers", "scripts", "linux-fetch-and-reload.sh")
 	cmd := exec.Command("bash", scriptPath)
 	cmd.Env = append(os.Environ(),
 		"GUARD_BASE="+srv.URL,
@@ -110,7 +131,7 @@ func TestLinuxScript_FetchAndGate(t *testing.T) {
 
 // TestWindowsScript_Static checks core contents of the PowerShell script to catch regressions.
 func TestWindowsScript_Static(t *testing.T) {
-	path := filepath.FromSlash("docs/implementers/scripts/windows-fetch-and-import.ps1")
+	path := filepath.Join(repoRoot(t), "docs", "implementers", "scripts", "windows-fetch-and-import.ps1")
 	f, err := os.Open(path)
 	if err != nil {
 		t.Skipf("windows script not found: %v", err)

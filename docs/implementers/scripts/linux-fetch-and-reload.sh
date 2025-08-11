@@ -9,9 +9,10 @@
 #    10 0 * * * /usr/local/bin/sb29-fetch-and-reload.sh
 
 set -euo pipefail
-GUARD_BASE="https://guard.school.internal"
-OUT_FILE="/etc/proxy/blocked.txt"
-ONLY_WHEN_CHANGED="true"
+# Allow env overrides; fall back to sensible defaults
+GUARD_BASE="${GUARD_BASE:-https://guard.school.internal}"
+OUT_FILE="${OUT_FILE:-/etc/proxy/blocked.txt}"
+ONLY_WHEN_CHANGED="${ONLY_WHEN_CHANGED:-true}"
 
 get_policy_version(){
   curl -fsS "$GUARD_BASE/metrics" | jq -r '.policy_version // ""' 2>/dev/null || true
